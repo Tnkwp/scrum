@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white rounded-xl p-4 shadow-md relative w-[280px] h-[160px] text-sm cursor-pointer"
+    class="bg-white rounded-xl p-4 shadow-md relative  text-sm cursor-pointer"
     @click="goToProjectPage"
   >
     <!-- Status badge -->

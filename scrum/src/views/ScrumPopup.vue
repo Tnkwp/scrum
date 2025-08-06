@@ -74,8 +74,6 @@ const props = defineProps({
   userId: String,
 });
 
-console.log(props);
-
 const emit = defineEmits(["close"]);
 
 const comment = ref("");

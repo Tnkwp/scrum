@@ -177,20 +177,6 @@ const togglePin = async (projectId) => {
   }
 };
 
-// onMounted(() => {
-//   const savedPins = localStorage.getItem("pinnedProjectIds");
-//   if (savedPins) {
-//     pinnedProjectIds.value = JSON.parse(savedPins);
-//   }
-// });
-
-// watch(
-//   pinnedProjectIds,
-//   (newVal) => {
-//     localStorage.setItem("pinnedProjectIds", JSON.stringify(newVal));
-//   },
-//   { deep: true }
-// );
 
 onMounted(fetchProjects);
 </script>

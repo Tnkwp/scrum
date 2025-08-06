@@ -6,8 +6,9 @@
           <h1 class="text-lg font-medium">
             <div class="flex gap-2">
               <router-link to="/homepage">
-                <img src="/left-arrow.png" alt="" /> </router-link
-              ><span>Project's Title:</span
+                <img src="/left-arrow.png" alt="" /> 
+              </router-link>
+              <span>Project's Title:</span
               ><span class="font-semibold">{{ project.title }}</span>
             </div>
           </h1>
@@ -48,7 +49,7 @@
             <!-- Daily -->
             <template v-if="member.type === 'daily'">
               <div class="flex items-center gap-2">
-                <strong>ปัญหา</strong>
+                <strong>ปัญหาวันนี้</strong>
                 <template v-if="member.problem_level">
                   <span
                     class="inline-block w-3 h-3 rounded-full"
@@ -67,7 +68,7 @@
                 {{ member.problem || "-" }}
               </p>
               <p>
-                <strong>พรุ่งนี้จะทำอะไร</strong><br />{{
+                <strong>พรุ่งนี้ทำอะไร</strong><br />{{
                   member.tomorrow || "-"
                 }}
               </p>
@@ -109,16 +110,20 @@
                 <div class="mb-2">
                   <p class="font-bold">คนที่ส่งแล้ว</p>
                   <ul class="ml-4 text-sm space-y-1">
-                    <li v-for="(p, i) in submitted" :key="'submitted-' + i">
-                      - {{ p.name }} ({{ p.role }})
+                    <li v-for="user in submittedUsers" :key="user.id">
+                      - {{ user.firstname }} {{ user.lastname }} ({{
+                        user.position
+                      }}) {{ user.scrum_point }} คะแนน
                     </li>
                   </ul>
                 </div>
 
                 <p class="font-bold mt-4">คนที่ยังไม่ได้ส่ง</p>
                 <ul class="ml-4 text-sm space-y-1">
-                  <li v-for="(p, i) in notSubmitted" :key="'not-' + i">
-                    - {{ p.name }} ({{ p.role }})
+                  <li v-for="member in notSubmittedUsers" :key="member.id">
+                    - {{ member.firstname }} {{ member.lastname }} ({{
+                      member.position
+                    }})
                   </li>
                 </ul>
               </div>
@@ -179,13 +184,12 @@
                 Create Daily-scrum
               </button>
               <div>
-                <router-link to="/history">
-                  <button
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  >
-                    History
-                  </button>
-                </router-link>
+                <button
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  @click="goToHistory"
+                >
+                  History
+                </button>
               </div>
             </template>
           </div>
@@ -380,6 +384,9 @@ const showModal = ref(false);
 const selectedProject = ref(null);
 const currentProjectId = ref(null);
 const scrumMemberss = ref([]);
+const allMembers = ref([]);
+const submittedUsers = ref([]);
+const notSubmittedUsers = ref([]);
 // const socket = io('http://localhost:3000');
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -553,17 +560,55 @@ const submitted = [
   { name: "Firstname Lastname", role: "Front-end" },
 ];
 
-const notSubmitted = [
-  { name: "Firstname Lastname", role: "Back-end" },
-  { name: "Firstname Lastname", role: "SA" },
-  { name: "Firstname Lastname", role: "Front-end" },
-];
+onMounted(async () => {
+  token.value = localStorage.getItem("token");
 
-// onMounted(() => {
-//   socket.on('commentBroadcast', (data) => {
-//     console.log('New comment:', data);
-//   });
-// });
+  try {
+    // 1. ดึงสมาชิกทั้งหมดจากโปรเจกต์
+    const projectRes = await axios.get(
+      `${backendUrl}/api/projects/${projectId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: true,
+      }
+    );
+    allMembers.value = projectRes.data.project.members || [];
+
+    // 2. ดึงรายการ scrum ที่ส่งแล้ว
+    const scrumRes = await axios.get(
+      `${backendUrl}/api/daily-scrum/project/${projectId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: true,
+      }
+    );
+
+    // 3. รวม user ที่ส่งแล้ว (ใช้ Set เพื่อป้องกันซ้ำ)
+    const seenUserIds = new Set();
+    submittedUsers.value = scrumRes.data.scrums
+      .map((scrum) => scrum.user)
+      .filter((user) => {
+        if (!seenUserIds.has(user.id)) {
+          seenUserIds.add(user.id);
+          return true;
+        }
+        return false;
+      });
+
+    // 4. คำนวณคนที่ยังไม่ได้ส่ง
+    notSubmittedUsers.value = allMembers.value.filter(
+      (member) => !seenUserIds.has(member.id)
+    );
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", error);
+  }
+});
 
 const openPopup = (member) => {
   selectedMember.value = member;
@@ -606,4 +651,8 @@ const handleCancel = () => {
   showPopup.value = false;
   resetForm();
 };
+
+const goToHistory = () => {
+  router.push(`/history/${projectId}`)
+}
 </script>

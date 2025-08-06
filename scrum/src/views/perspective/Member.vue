@@ -25,26 +25,78 @@
           >
             <div class="flex justify-between items-center mb-2">
               <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-                <div class="font-semibold">Firstname Lastname</div>
+                <div>
+                  <img
+                    :src="member?.profile_pic || '/user.png'"
+                    referrerpolicy="no-referrer"
+                    alt="profile"
+                    class="w-10 h-10 border-2 border-gray-300 rounded-full object-cover"
+                  />
+                </div>
+                <div class="font-semibold">
+                  {{ member.firstname }} {{ member.lastname }}
+                </div>
               </div>
               <span class="bg-gray-200 text-xs px-3 py-1 rounded-full">
                 {{ member.role }}
               </span>
             </div>
+
+            <!-- Shared -->
             <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today }}</p>
-            <p><strong>ปัญหา</strong><br />{{ member.problem }}</p>
-            <p><strong>พรุ่งนี้จะทำอะไร</strong><br />{{ member.tomorrow }}</p>
+
+            <!-- Daily -->
+            <template v-if="member.type === 'daily'">
+              <div class="flex items-center gap-2">
+                <strong>ปัญหา</strong>
+                <template v-if="member.problem_level">
+                  <span
+                    class="inline-block w-3 h-3 rounded-full"
+                    :class="{
+                      'bg-green-500': member.problem_level === 'minor',
+                      'bg-yellow-500': member.problem_level === 'moderate',
+                      'bg-red-500': member.problem_level === 'critical',
+                    }"
+                  ></span>
+                </template>
+                <template v-else>
+                  <span class="text-sm text-gray-500">-</span>
+                </template>
+              </div>
+              <p class="mt-1 text-sm text-gray-700">
+                {{ member.problem || "-" }}
+              </p>
+              <p>
+                <strong>พรุ่งนี้จะทำอะไร</strong><br />{{
+                  member.tomorrow || "-"
+                }}
+              </p>
+            </template>
+
+            <!-- Friday / Retrospective -->
+            <template
+              v-else-if="
+                member.type === 'friday' || member.type === 'retrospective'
+              "
+            >
+              <p><strong>Good</strong><br />{{ member.good || "-" }}</p>
+              <p><strong>Bad</strong><br />{{ member.bad || "-" }}</p>
+              <p><strong>Try</strong><br />{{ member.try || "-" }}</p>
+              <p>
+                <strong>Next Sprint</strong><br />{{
+                  member.next_sprint || "-"
+                }}
+              </p>
+            </template>
           </div>
         </div>
 
         <ScrumPopup
           v-if="showPopupp"
-          :visible="showPopup"
+          :visible="showPopupp"
           :data="selectedMember"
           :socket="socket"
-          :user-id="userId"
-          @close="showPopup = false"
+          @close="showPopupp = false"
         />
 
         <div>
@@ -110,7 +162,7 @@
                 Create Daily-scrum
               </button>
               <div>
-                <router-link to="/history">
+                <router-link to="/history/">
                   <button
                     class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
                   >
@@ -126,6 +178,15 @@
               >
                 Create Daily-scrum
               </button>
+              <div>
+                <router-link to="/history">
+                  <button
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  >
+                    History
+                  </button>
+                </router-link>
+              </div>
             </template>
           </div>
         </div>
@@ -312,14 +373,13 @@ const position = route.query.position;
 const projectId = route.query.projectId;
 const project = ref(null);
 const token = ref(null);
-
 const showPopup = ref(false);
 const showPopupp = ref(false);
 const selectedMember = ref(null);
 const showModal = ref(false);
 const selectedProject = ref(null);
 const currentProjectId = ref(null);
-const userId = "user123";
+const scrumMemberss = ref([]);
 // const socket = io('http://localhost:3000');
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -427,6 +487,49 @@ onMounted(() => {
   if (projectId) fetchProject();
 });
 
+const fetchScrumData = async () => {
+  token.value = localStorage.getItem("token");
+  try {
+    const res = await axios.get(
+      `${backendUrl}/api/daily-scrum/project/${projectId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: true,
+      }
+    );
+    // สมมุติว่า response = { scrums: [...] }
+    const scrums = res.data.scrums;
+
+    // map ให้ง่ายต่อการใช้กับ template
+    scrumMemberss.value = res.data.scrums.map((scrum) => ({
+      type: scrum.type,
+      today: scrum.today_task,
+      problem: scrum.problem,
+      problem_level: scrum.problem_level,
+      tomorrow: scrum.tomorrow_task,
+      good: scrum.good,
+      bad: scrum.bad,
+      try: scrum.try,
+      next_sprint: scrum.next_sprint,
+      firstname: scrum.user.firstname,
+      lastname: scrum.user.lastname,
+      profile_pic: scrum.user.profile_pic,
+      role: scrum.user.position,
+    }));
+  } catch (err) {
+    console.error("Error fetching scrum data:", err);
+  }
+};
+
+onMounted(() => {
+  if (projectId) {
+    fetchScrumData();
+  }
+});
+
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
   const day = String(date.getDate()).padStart(2, "0"); // เติม 0 ถ้าต่ำกว่า 10
@@ -442,18 +545,6 @@ const getTodayDate = () => {
   const year = today.getFullYear();
   return `${day}/${month}/${year}`;
 };
-
-const scrumMemberss = ref([
-  {
-    role: "BA",
-    today: "ถาม Requirements จากลูกค้า",
-    problem: "-",
-    tomorrow: "จัดการ Requirements ที่ได้จากลูกค้า",
-    imageUrl: "https://i.imgur.com/LfBRqgI.png",
-    fileName: "file.pdf",
-    memberId: "ba01",
-  },
-]);
 
 const submitted = [
   { name: "Firstname Lastname", role: "BA" },

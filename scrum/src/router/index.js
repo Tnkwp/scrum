@@ -10,7 +10,7 @@ import History from "../views/history.vue"
 import EditProfile from "../views/EditProfile.vue";
 import Homepage from "../views/Homepage.vue";
 import Member from "../views/perspective/Member.vue";
-import Owner from "../views/perspective/Owner.vue"
+
 
 
 const routes = [
@@ -59,12 +59,7 @@ const routes = [
     component: Member,
   },
   {
-    path: "/owner/:id",
-    name: "Owner",
-    component: Owner,
-  },
-  {
-    path: "/history",
+    path: "/history/:id",
     name: "History",
     component: History,
   },

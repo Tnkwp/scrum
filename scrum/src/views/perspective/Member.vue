@@ -37,7 +37,7 @@
                 <div class="font-semibold">
                   {{ member.firstname }} {{ member.lastname }}
                   <span class="text-[12px] font-thin">{{
-                    formatDate(project.created_at)
+                    formatDate(project?.created_at)
                   }}</span>
                 </div>
               </div>
@@ -220,7 +220,7 @@
                 >Daily-scrum Type</label
               >
               <select
-                v-model="formData.scrumType"
+                v-model="formData.type"
                 class="w-full border border-gray-300 rounded px-5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="daily">Daily scrum</option>
@@ -242,7 +242,7 @@
           </div>
 
           <!-- Dynamic fields based on scrumType -->
-          <div v-if="formData.scrumType === 'daily'">
+          <div v-if="formData.type === 'daily'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >
@@ -253,17 +253,17 @@
             />
             <div class="flex gap-2 items-center mb-1 mt-2">
               <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-              >ปัญหาวันนี้</label
-            >
-            <select
-              v-model="formData.problem_level"
-              class="border rounded px-2 py-2"
-            >
-              <option disabled value="">-- เลือกระดับความรุนแรง --</option>
-              <option>minor</option>
-              <option>moderate</option>
-              <option>critical</option>
-            </select>
+                >ปัญหาวันนี้</label
+              >
+              <select
+                v-model="formData.problem_level"
+                class="border rounded px-2 py-2"
+              >
+                <option disabled value="">-- เลือกระดับความรุนแรง --</option>
+                <option>minor</option>
+                <option>moderate</option>
+                <option>critical</option>
+              </select>
             </div>
             <textarea
               v-model="formData.problem"
@@ -278,9 +278,20 @@
               class="w-full border rounded px-3 py-2 h-20"
               placeholder="สิ่งที่จะทำพรุ่งนี้..."
             />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
+                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
+              </label>
+              <input
+                type="file"
+                multiple
+                @change="handleFileChange"
+                class="w-full border rounded px-3 py-2"
+              />
+            </div>
           </div>
 
-          <div v-else-if="formData.scrumType === 'friday'">
+          <div v-else-if="formData.type === 'friday'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >
@@ -316,9 +327,20 @@
               v-model="formData.next_sprint"
               class="w-full border rounded px-3 py-2 h-20"
             />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
+                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
+              </label>
+              <input
+                type="file"
+                multiple
+                @change="handleFileChange"
+                class="w-full border rounded px-3 py-2"
+              />
+            </div>
           </div>
 
-          <div v-else-if="formData.scrumType === 'retrospective'">
+          <div v-else-if="formData.type === 'retrospective'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >
@@ -354,6 +376,17 @@
               v-model="formData.next_sprint"
               class="w-full border rounded px-3 py-2 h-20"
             />
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
+                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
+              </label>
+              <input
+                type="file"
+                multiple
+                @change="handleFileChange"
+                class="w-full border rounded px-3 py-2"
+              />
+            </div>
           </div>
 
           <!-- Buttons -->
@@ -402,12 +435,28 @@ const scrumMemberss = ref([]);
 const allMembers = ref([]);
 const submittedUsers = ref([]);
 const notSubmittedUsers = ref([]);
+const fileInputs = ref([])
 // const socket = io('http://localhost:3000');
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-const addProject = (newProject) => {
-  console.log("New project added:", newProject);
-};
+// const addProject = (newProject) => {
+//   console.log("New project added:", newProject);
+// };
+
+const formData = ref({
+  type: "daily",
+  today_task: "",
+  problem: "",
+  problem_level: "",
+  tomorrow_task: "",
+  good: "",
+  bad: "",
+  try: "",
+  next_sprint: "",
+  project_id: null, // <-- ค่าเริ่มต้น จะเซตทีหลัง
+  created_at: "",
+  files: [],
+});
 
 const openEditModal = (id) => {
   currentProjectId.value = id;
@@ -540,6 +589,7 @@ const fetchScrumData = async () => {
       lastname: scrum.user.lastname,
       profile_pic: scrum.user.profile_pic,
       role: scrum.user.position,
+      file: scrum.files,
     }));
   } catch (err) {
     console.error("Error fetching scrum data:", err);
@@ -623,41 +673,54 @@ const openPopup = (member) => {
   showPopupp.value = true;
 };
 
-const formData = ref({
-  scrumType: "Default scrum",
-  date: "",
-  activity: "",
-  problem: "",
-  tomorrow: "",
-  sprintGoal: "",
-  completedWork: "",
-  good: "",
-  bad: "",
+const handleFileChange = (e) => {
+  fileInputs.value = Array.from(e.target.files);
+};
+
+const handleSubmit = async () => {
+  token.value = localStorage.getItem('token')
+
+  try {
+    const data = new FormData()
+
+    // กรองและเพิ่มเฉพาะ field ที่มีค่า ไม่เป็น undefined หรือ null
+    for (const key in formData.value) {
+      const value = formData.value[key]
+      if (value !== undefined && value !== null && value !== '') {
+        data.append(key, value)
+      }
+    }
+
+    // เพิ่มไฟล์
+    fileInputs.value.forEach((file) => {
+      data.append('files', file)
+    })
+
+    const response = await axios.post(`${backendUrl}/api/daily-scrum`, data, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
+      withCredentials: true,
+    })
+
+    console.log('Submitted:', response.data)
+    showPopup.value = false
+    location.reload()
+  } catch (error) {
+    console.error('Error submitting daily scrum:', error)
+  }
+}
+
+onMounted(() => {
+  const projectId = route.query.projectId;
+  if (projectId) {
+    formData.value.project_id = Number(projectId); // แปลงเป็น number (ตามที่ backend อาจต้องการ)
+  }
 });
-
-const resetForm = () => {
-  formData.value = {
-    scrumType: "Default scrum",
-    date: "",
-    activity: "",
-    problem: "",
-    tomorrow: "",
-    sprintGoal: "",
-    completedWork: "",
-    good: "",
-    bad: "",
-  };
-};
-
-const handleSubmit = () => {
-  console.log("Form submitted:", { ...formData.value });
-  showPopup.value = false;
-  resetForm();
-};
 
 const handleCancel = () => {
   showPopup.value = false;
-  resetForm();
 };
 
 const goToHistory = () => {

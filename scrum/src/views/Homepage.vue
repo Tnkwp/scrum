@@ -16,19 +16,20 @@
 
           <!-- Project Card Component -->
           <ProjectCard
-            v-for="project in sortedProjects"
-            :key="project.id"
-            :title="project.title"
-            :status="formatStatus(project.status)"
-            :end="formatDate(project.deadline_date)"
-            :owner="getOwnerImage(project.members)"
-            :members="project.members"
-            :memberImages="getMemberImages(project.members)"
-            :projectId="project.id"
-            :isPinned="project.members.find((m) => m.id === currentUserId.value)?.is_pinned"
-            :currentUserId="currentUserId.value"
-            @toggle-pin="togglePin"
-          />
+                v-for="project in sortedProjects"
+                :key="project.id"
+                :project="project"
+                :title="project.title"
+                :status="formatStatus(project.status)"
+                :end="formatDate(project.deadline_date)"
+                :owner="getOwnerImage(project.members)"
+                :members="project.members"
+                :memberImages="getMemberImages(project.members)"
+                :projectId="project.id"
+                :isPinned="getIsPinned(project)"
+                :currentUserId="currentUserId.value"
+                @toggle-pin="togglePin"
+              />
         </div>
         <ProjectFormModal
           v-if="showModal"
@@ -46,6 +47,7 @@ import axios from "axios";
 import ProjectCard from "./ProjectCard.vue";
 import ProjectFormModal from "../components/ProjectFormModal.vue";
 import { useUserStore } from "../stores/userStore.js";
+import Swal from "sweetalert2";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -58,6 +60,12 @@ console.log("ProjectCard", ProjectCard);
 const addProject = (newProject) => {
   console.log("New project added:", newProject);
   fetchProjects();
+};
+
+const getIsPinned = (project) => {
+  return computed(() =>
+    project.members.find((m) => m.id === currentUserId.value)?.is_pinned ?? false
+  );
 };
 
 const fetchProjects = async () => {
@@ -118,14 +126,24 @@ const sortedProjects = computed(() => {
   if (!currentUserId.value) return projects.value;
 
   return [...projects.value].sort((a, b) => {
+    const aIsMember = a.members.some(m => m.id === currentUserId.value);
+    const bIsMember = b.members.some(m => m.id === currentUserId.value);
+
+    // If only one is a member, that one comes first
+    if (aIsMember && !bIsMember) return -1;
+    if (!aIsMember && bIsMember) return 1;
+
+    // If both are members or both are not members, sort by pinned
     const aPinned = a.members.find(m => m.id === currentUserId.value)?.is_pinned ?? false;
     const bPinned = b.members.find(m => m.id === currentUserId.value)?.is_pinned ?? false;
 
     if (aPinned && !bPinned) return -1;
     if (!aPinned && bPinned) return 1;
-    return a.id - b.id;
+
+    return a.id - b.id; // fallback by project ID
   });
 });
+
 
 // สลับ pin/unpin
 const togglePin = async (projectId) => {
@@ -145,10 +163,16 @@ const togglePin = async (projectId) => {
 
   const member = project.members.find((m) => m.id === userId);
   if (!member) {
-    console.warn("User not found in project members");
+    // 🚨 Not a member
+    await Swal.fire({
+      icon: 'warning',
+      title: 'คุณไม่ใช่สมาชิกของโปรเจกต์นี้',
+      text: 'ไม่สามารถปักหมุดหรือเลิกปักหมุดได้',
+      confirmButtonText: 'ตกลง',
+      confirmButtonColor: '#28a745'
+    });
     return;
   }
-
 
   const currentlyPinned = member.is_pinned;
 
@@ -176,7 +200,6 @@ const togglePin = async (projectId) => {
     console.error("Failed to toggle pin:", err);
   }
 };
-
 
 onMounted(fetchProjects);
 </script>

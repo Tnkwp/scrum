@@ -1,29 +1,20 @@
 <template>
-  <div
-    class="bg-white rounded-xl p-4 shadow-md relative  text-sm cursor-pointer"
-    @click="goToProjectPage"
-  >
+  <div class="rounded-xl p-4 shadow-md relative text-sm cursor-pointer" :class="[
+    isMember ? 'bg-white' : 'bg-gray-200 opacity-60',
+  ]" @click="goToProjectPage">
     <!-- Status badge -->
-    <span
-      class="absolute top-2 right-10 text-white text-xs px-3 py-1 rounded-full"
-      :class="{
-        'bg-red-400': status === 'In progress',
-        'bg-green-400': status === 'Done',
-      }"
-    >
+    <span class="absolute top-2 right-10 text-white text-xs px-3 py-1 rounded-full" :class="{
+      'bg-red-400': status === 'In progress',
+      'bg-green-400': status === 'Done',
+    }">
       {{ status || "In progress" }}
     </span>
 
     <!-- Pin icon -->
-    <button
-      class="absolute top-2 right-2"
-      @click.stop="emit('toggle-pin', projectId)"
-    >
-      <img
-        :src="isPinned ? '/push-pinn.png' : '/push-pin.png'"
-        alt="pin"
-        class="w-6 h-6"
-      />
+    <button class="absolute top-2 right-2" @click.stop="emit('toggle-pin', projectId)">
+      <img v-if="isPinned?.value" src="/push-pinn.png" alt="Pinned" class="w-6 h-6" />
+      <img v-else src="/push-pin.png" alt="Unpinned" class="w-6 h-6" />
+
     </button>
 
     <!-- Title and basic info -->
@@ -38,29 +29,18 @@
     </div>
 
     <!-- Owner and Members -->
-    <div
-      class="flex items-start justify-start mt-3 text-gray-600 text-xs gap-4"
-    >
+    <div class="flex items-start justify-start mt-3 text-gray-600 text-xs gap-4">
       <!-- Owner -->
       <div class="flex flex-col items-center">
         <p class="mb-1">Owner</p>
-        <img
-          :src="owner"
-          alt="owner"
-          class="w-6 h-6 rounded-full bg-gray-300"
-        />
+        <img :src="owner" alt="owner" class="w-6 h-6 rounded-full bg-gray-300" />
       </div>
 
       <!-- Members -->
       <div class="flex flex-col">
         <p class="mb-1">Member</p>
         <div class="flex gap-1">
-          <img
-            v-for="(img, index) in memberImages"
-            :key="index"
-            :src="img"
-            class="w-6 h-6 rounded-full bg-gray-300"
-          />
+          <img v-for="(img, index) in memberImages" :key="index" :src="img" class="w-6 h-6 rounded-full bg-gray-300" />
         </div>
       </div>
     </div>
@@ -68,12 +48,23 @@
 </template>
 
 <script setup>
+import { watch } from "vue";
 import { ref } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/userStore.js";
+import { computed } from "vue";
+
+
+const emit = defineEmits(["toggle-pin"]);
+const router = useRouter();
+const userStore = useUserStore();
+const token = localStorage.getItem("token");
+const decoded = parseJwt(token);
+const currentUserId = decoded?.id;
 
 const props = defineProps({
+  project: Object,
   title: String,
   status: String,
   end: String,
@@ -85,12 +76,9 @@ const props = defineProps({
   currentUserId: Number,
 });
 
-const emit = defineEmits(["toggle-pin"]);
-const router = useRouter();
-const userStore = useUserStore();
-
-console.log('User from Pinia:', userStore.user);
-console.log(props.title)
+const isMember = computed(() =>
+  props.project.members.some(member => member.id === currentUserId)
+)
 
 function parseJwt(token) {
   try {
@@ -107,7 +95,6 @@ function parseJwt(token) {
     return null;
   }
 }
-
 
 function goToProjectPage() {
   const token = localStorage.getItem("token");

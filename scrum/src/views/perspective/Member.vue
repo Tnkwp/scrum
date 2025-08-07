@@ -6,7 +6,7 @@
           <h1 class="text-lg font-medium">
             <div class="flex gap-2">
               <router-link to="/homepage">
-                <img src="/left-arrow.png" alt="" /> 
+                <img src="/left-arrow.png" alt="" />
               </router-link>
               <span>Project's Title:</span
               ><span class="font-semibold">{{ project.title }}</span>
@@ -36,6 +36,9 @@
                 </div>
                 <div class="font-semibold">
                   {{ member.firstname }} {{ member.lastname }}
+                  <span class="text-[12px] font-thin">{{
+                    formatDate(project.created_at)
+                  }}</span>
                 </div>
               </div>
               <span class="bg-gray-200 text-xs px-3 py-1 rounded-full">
@@ -167,13 +170,12 @@
                 Create Daily-scrum
               </button>
               <div>
-                <router-link to="/history/">
-                  <button
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  >
-                    History
-                  </button>
-                </router-link>
+                <button
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  @click="goToHistory"
+                >
+                  History
+                </button>
               </div>
             </template>
             <template v-else>
@@ -223,7 +225,6 @@
               >
                 <option value="Default scrum">Default scrum</option>
                 <option value="Sprint Planning">Friday Scrum</option>
-                <option value="Sprint Review">Sprint Review</option>
                 <option value="Sprint Retrospective">Retrospective</option>
               </select>
             </div>
@@ -234,7 +235,7 @@
               >
               <input
                 type="date"
-                v-model="formData.date"
+                v-model="formData.created_at"
                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -243,26 +244,37 @@
           <!-- Dynamic fields based on scrumType -->
           <div v-if="formData.scrumType === 'Default scrum'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
-              >กิจกรรม</label
+              >สิ่งที่ทำวันนี้</label
             >
             <textarea
-              v-model="formData.activity"
+              v-model="formData.today_task"
               class="w-full border rounded px-3 py-2 h-20"
-              placeholder="กิจกรรมที่ทำ..."
+              placeholder="สิ่งที่ทำวันนี้..."
             />
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-              >ปัญหา</label
+            <div class="flex gap-2 items-center mb-1 mt-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+              >ปัญหาวันนี้</label
             >
+            <select
+              v-model="formData.problem_level"
+              class="border rounded px-2 py-2"
+            >
+              <option disabled value="">-- เลือกระดับความรุนแรง --</option>
+              <option>minor</option>
+              <option>moderate</option>
+              <option>critical</option>
+            </select>
+            </div>
             <textarea
               v-model="formData.problem"
               class="w-full border rounded px-3 py-2 h-20"
               placeholder="ปัญหาที่เจอ..."
             />
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-              >พรุ่งนี้จะทำ</label
+              >พรุ่งนี้ทำอะไร</label
             >
             <textarea
-              v-model="formData.tomorrow"
+              v-model="formData.tomorrow_task"
               class="w-full border rounded px-3 py-2 h-20"
               placeholder="สิ่งที่จะทำพรุ่งนี้..."
             />
@@ -273,51 +285,9 @@
               >สิ่งที่ทำวันนี้</label
             >
             <textarea
-              v-model="formData.sprintGoal"
+              v-model="formData.today_task"
               class="w-full border rounded px-3 py-2 h-20"
             />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Good</label
-            >
-            <textarea
-              v-model="formData.sprintGoal"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Bad</label
-            >
-            <textarea
-              v-model="formData.sprintGoal"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Try</label
-            >
-            <textarea
-              v-model="formData.sprintGoal"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Next Sprint</label
-            >
-            <textarea
-              v-model="formData.sprintGoal"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-          </div>
-
-          <div v-else-if="formData.scrumType === 'Sprint Review'">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >งานที่เสร็จ</label
-            >
-            <textarea
-              v-model="formData.completedWork"
-              class="w-full border rounded px-3 py-2 h-20"
-              placeholder="ระบุงานที่เสร็จ..."
-            />
-          </div>
-
-          <div v-else-if="formData.scrumType === 'Sprint Retrospective'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >Good</label
             >
@@ -325,18 +295,63 @@
               v-model="formData.good"
               class="w-full border rounded px-3 py-2 h-20"
             />
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+            <label class="block text-sm font-medium text-gray-700 mb-1"
               >Bad</label
             >
             <textarea
               v-model="formData.bad"
               class="w-full border rounded px-3 py-2 h-20"
             />
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+            <label class="block text-sm font-medium text-gray-700 mb-1"
               >Try</label
             >
             <textarea
+              v-model="formData.try"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Next Sprint</label
+            >
+            <textarea
+              v-model="formData.next_sprint"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+          </div>
+
+          <div v-else-if="formData.scrumType === 'Sprint Retrospective'">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >สิ่งที่ทำวันนี้</label
+            >
+            <textarea
+              v-model="formData.today_task"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Good</label
+            >
+            <textarea
+              v-model="formData.good"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Bad</label
+            >
+            <textarea
               v-model="formData.bad"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Try</label
+            >
+            <textarea
+              v-model="formData.try"
+              class="w-full border rounded px-3 py-2 h-20"
+            />
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Next Sprint</label
+            >
+            <textarea
+              v-model="formData.next_sprint"
               class="w-full border rounded px-3 py-2 h-20"
             />
           </div>
@@ -553,13 +568,6 @@ const getTodayDate = () => {
   return `${day}/${month}/${year}`;
 };
 
-const submitted = [
-  { name: "Firstname Lastname", role: "BA" },
-  { name: "Firstname Lastname", role: "UX/UI" },
-  { name: "Firstname Lastname", role: "Back-end" },
-  { name: "Firstname Lastname", role: "Front-end" },
-];
-
 onMounted(async () => {
   token.value = localStorage.getItem("token");
 
@@ -653,6 +661,6 @@ const handleCancel = () => {
 };
 
 const goToHistory = () => {
-  router.push(`/history/${projectId}`)
-}
+  router.push(`/history/${projectId}`);
+};
 </script>

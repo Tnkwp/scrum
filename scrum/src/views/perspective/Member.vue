@@ -21,23 +21,57 @@
           <div
             v-for="(member, index) in scrumMemberss"
             :key="index"
-            class="bg-white p-4 rounded-lg shadow cursor-pointer"
+            class="relative bg-white p-4 rounded-lg shadow cursor-pointer"
             @click="openPopup(member)"
+            @mouseenter="handleMouseEnter(index)"
+            @mouseleave="handleMouseLeave"
           >
+            <!-- จุด 3 จุด: แสดงเฉพาะตอน hover -->
+            <div
+              class="absolute top-2 right-2 z-20"
+              v-if="hoveredIndex === index"
+              @click.stop
+            >
+              <button
+                class="text-gray-500 hover:text-black focus:outline-none"
+                @click="toggleDropdown(index)"
+              >
+                ⋮
+              </button>
+
+              <!-- เมนู dropdown: แสดงเมื่อคลิก ⋮ -->
+              <div
+                v-if="activeDropdownIndex === index"
+                class="absolute right-0 mt-2 w-28 bg-white border border-gray-300 rounded shadow-md"
+              >
+                <button
+                  class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  @click="editMember(member)"
+                >
+                  ✏️ แก้ไข
+                </button>
+                <button
+                  class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-500"
+                  @click="deleteMember(member)"
+                >
+                  🗑️ ลบ
+                </button>
+              </div>
+            </div>
+
+            <!-- ส่วนเดิมของการ์ด -->
             <div class="flex justify-between items-center mb-2">
               <div class="flex items-center space-x-3">
-                <div>
-                  <img
-                    :src="member?.profile_pic || '/user.png'"
-                    referrerpolicy="no-referrer"
-                    alt="profile"
-                    class="w-10 h-10 border-2 border-gray-300 rounded-full object-cover"
-                  />
-                </div>
+                <img
+                  :src="member?.profile_pic || '/user.png'"
+                  referrerpolicy="no-referrer"
+                  alt="profile"
+                  class="w-10 h-10 border-2 border-gray-300 rounded-full object-cover"
+                />
                 <div class="font-semibold">
                   {{ member.firstname }} {{ member.lastname }}
                   <span class="text-[12px] font-thin">{{
-                    formatDate(project?.created_at)
+                    formatDate(member.created_at)
                   }}</span>
                 </div>
               </div>
@@ -46,7 +80,7 @@
               </span>
             </div>
 
-            <!-- Shared -->
+            <!-- เนื้อหา -->
             <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today }}</p>
 
             <!-- Daily -->
@@ -77,7 +111,7 @@
               </p>
             </template>
 
-            <!-- Friday / Retrospective -->
+            <!-- Retrospective -->
             <template
               v-else-if="
                 member.type === 'friday' || member.type === 'retrospective'
@@ -435,7 +469,9 @@ const scrumMemberss = ref([]);
 const allMembers = ref([]);
 const submittedUsers = ref([]);
 const notSubmittedUsers = ref([]);
-const fileInputs = ref([])
+const fileInputs = ref([]);
+const hoveredIndex = ref(null);
+const activeDropdownIndex = ref(null);
 // const socket = io('http://localhost:3000');
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -457,6 +493,69 @@ const formData = ref({
   created_at: "",
   files: [],
 });
+
+function handleMouseEnter(index) {
+  hoveredIndex.value = index;
+}
+
+function handleMouseLeave() {
+  hoveredIndex.value = null;
+}
+
+function toggleDropdown(index) {
+  activeDropdownIndex.value =
+    activeDropdownIndex.value === index ? null : index;
+}
+
+function editMember(member) {
+  console.log("Edit:", member);
+}
+
+
+async function deleteMember(member) {
+  token.value = localStorage.getItem("token");
+
+  const result = await Swal.fire({
+    title: `ต้องการลบ Scrum ของ ${member.firstname} ${member.lastname} หรือไม่?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#aaa',
+    confirmButtonText: 'ลบ',
+    cancelButtonText: 'ยกเลิก',
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const id = member.id;
+    const response = await axios.delete(`${backendUrl}/api/daily-scrum/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
+    });
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'ลบสำเร็จ',
+      text: `${member.firstname} ${member.lastname} ถูกลบเรียบร้อยแล้ว`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    location.reload(); 
+
+  } catch (error) {
+    console.error('Error deleting scrum:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถลบรายการได้ กรุณาลองใหม่',
+    });
+  }
+}
 
 const openEditModal = (id) => {
   currentProjectId.value = id;
@@ -576,6 +675,7 @@ const fetchScrumData = async () => {
 
     // map ให้ง่ายต่อการใช้กับ template
     scrumMemberss.value = res.data.scrums.map((scrum) => ({
+      id: scrum.id,
       type: scrum.type,
       today: scrum.today_task,
       problem: scrum.problem,
@@ -590,6 +690,7 @@ const fetchScrumData = async () => {
       profile_pic: scrum.user.profile_pic,
       role: scrum.user.position,
       file: scrum.files,
+      created_at: scrum.created_at,
     }));
   } catch (err) {
     console.error("Error fetching scrum data:", err);
@@ -678,39 +779,39 @@ const handleFileChange = (e) => {
 };
 
 const handleSubmit = async () => {
-  token.value = localStorage.getItem('token')
+  token.value = localStorage.getItem("token");
 
   try {
-    const data = new FormData()
+    const data = new FormData();
 
     // กรองและเพิ่มเฉพาะ field ที่มีค่า ไม่เป็น undefined หรือ null
     for (const key in formData.value) {
-      const value = formData.value[key]
-      if (value !== undefined && value !== null && value !== '') {
-        data.append(key, value)
+      const value = formData.value[key];
+      if (value !== undefined && value !== null && value !== "") {
+        data.append(key, value);
       }
     }
 
     // เพิ่มไฟล์
     fileInputs.value.forEach((file) => {
-      data.append('files', file)
-    })
+      data.append("files", file);
+    });
 
     const response = await axios.post(`${backendUrl}/api/daily-scrum`, data, {
       headers: {
         Authorization: `Bearer ${token.value}`,
-        'ngrok-skip-browser-warning': 'true',
+        "ngrok-skip-browser-warning": "true",
       },
       withCredentials: true,
-    })
+    });
 
-    console.log('Submitted:', response.data)
-    showPopup.value = false
-    location.reload()
+    console.log("Submitted:", response.data);
+    showPopup.value = false;
+    location.reload();
   } catch (error) {
-    console.error('Error submitting daily scrum:', error)
+    console.error("Error submitting daily scrum:", error);
   }
-}
+};
 
 onMounted(() => {
   const projectId = route.query.projectId;

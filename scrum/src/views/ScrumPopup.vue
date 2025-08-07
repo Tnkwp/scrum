@@ -150,10 +150,6 @@ const props = defineProps({
   userId: String,
 });
 
-
-
-console.log(props.data.file);
-
 const emit = defineEmits(["close"]);
 
 const comment = ref("");

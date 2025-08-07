@@ -223,9 +223,9 @@
                 v-model="formData.scrumType"
                 class="w-full border border-gray-300 rounded px-5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="Default scrum">Default scrum</option>
-                <option value="Sprint Planning">Friday Scrum</option>
-                <option value="Sprint Retrospective">Retrospective</option>
+                <option value="daily">Daily scrum</option>
+                <option value="friday">Friday Scrum</option>
+                <option value="retrospective">Retrospective</option>
               </select>
             </div>
 
@@ -242,7 +242,7 @@
           </div>
 
           <!-- Dynamic fields based on scrumType -->
-          <div v-if="formData.scrumType === 'Default scrum'">
+          <div v-if="formData.scrumType === 'daily'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >
@@ -280,7 +280,7 @@
             />
           </div>
 
-          <div v-else-if="formData.scrumType === 'Sprint Planning'">
+          <div v-else-if="formData.scrumType === 'friday'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >
@@ -318,7 +318,7 @@
             />
           </div>
 
-          <div v-else-if="formData.scrumType === 'Sprint Retrospective'">
+          <div v-else-if="formData.scrumType === 'retrospective'">
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >สิ่งที่ทำวันนี้</label
             >

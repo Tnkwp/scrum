@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="!isLogin"><Nav /></div>
+    <!-- <div v-if="!isLogin"><Nav /></div> -->
     <router-view />
   </div>
 </template>

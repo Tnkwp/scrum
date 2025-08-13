@@ -33,7 +33,7 @@
               @click.stop
             >
               <button
-                class="text-gray-500 hover:text-black focus:outline-none"
+                class="text-gray-500 w-6 rounded-full hover:text-black hover:rounded-full hover:bg-gray-100 hover:w-6 focus:outline-none"
                 @click="toggleDropdown(index)"
               >
                 ⋮

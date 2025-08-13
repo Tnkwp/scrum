@@ -55,7 +55,7 @@
                   f.file_name.toLowerCase().endsWith('.pdf')
                 "
               >
-                <img src="/file.png" alt="" class="w-6 h-6">
+                <img src="/file.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- Word -->
@@ -67,7 +67,7 @@
                   f.file_name.toLowerCase().endsWith('.docx')
                 "
               >
-                <img src="/doc.png" alt="" class="w-6 h-6">
+                <img src="/doc.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- Excel -->
@@ -78,7 +78,7 @@
                   f.file_name.toLowerCase().endsWith('.xlsx')
                 "
               >
-                <img src="/xls.png" alt="" class="w-6 h-6">
+                <img src="/xls.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- PowerPoint -->
@@ -89,7 +89,7 @@
                   f.file_name.toLowerCase().endsWith('.pptx')
                 "
               >
-                <img src="/ppt.png" alt="" class="w-6 h-6">
+                <img src="/ppt.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- Text -->
@@ -99,7 +99,7 @@
                   f.file_name.toLowerCase().endsWith('.txt')
                 "
               >
-                <img src="/txt-file.png" alt="" class="w-6 h-6">
+                <img src="/txt-file.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- Default ไฟล์อื่นๆ -->
@@ -124,13 +124,41 @@
           </div>
         </div>
       </div>
-      <hr class="my-4" />
-      <div class="flex items-center">
+      <hr class="my-2" />
+      <div>
+        <span class="text-[14px]"> Commment </span>
+      </div>
+      <div class="space-y-3 max-h-64 overflow-y-auto pr-2">
+        <div
+          v-for="comment in comments"
+          :key="comment.id"
+          class="flex items-start space-x-2"
+        >
+          <div>
+            <div class="flex gap-2 items-center">
+              <img
+                :src="comment.User?.profile_pic || '/user.png'"
+                class="w-6 h-6 rounded-full"
+                alt="profile"
+              />
+              <p class="text-sm font-semibold">
+                {{ comment.User?.firstname }} {{ comment.User?.lastname }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-700">{{ comment.comment }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- กล่องป้อนคอมเมนต์ -->
+      <div class="flex items-center mt-2">
         <input
-          v-model="comment"
+          v-model="newComment"
           type="text"
-          placeholder="Comment"
-          class="flex-1 border rounded px-3 py-1"
+          placeholder="Sent..."
+          class="flex-1 border rounded-full px-3 py-1 text-sm"
           @keydown.enter="sendComment"
         />
         <button @click="sendComment" class="ml-2 text-2xl">➤</button>
@@ -140,8 +168,17 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { defineProps, defineEmits } from "vue";
+import axios from "axios";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+const dailyScrumId = route.params.id;
+const comments = ref([]);
+const newComment = ref("");
+const token = ref(null);
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 const props = defineProps({
   visible: Boolean,
@@ -150,18 +187,68 @@ const props = defineProps({
   userId: String,
 });
 
+console.log(dailyScrumId);
+console.log(props.data.id);
+
 const emit = defineEmits(["close"]);
 
-const comment = ref("");
-
-function sendComment() {
-  if (comment.value.trim() !== "") {
-    props.socket.emit("newComment", {
-      comment: comment.value,
-      for: props.data.memberId,
-      timestamp: new Date().toISOString(),
+async function fetchComments() {
+  token.value = localStorage.getItem("token");
+  try {
+    const res = await axios.get(`${backendUrl}/api/comments/${props.data.id}`, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
     });
-    comment.value = "";
+
+    if (Array.isArray(res.data.comments)) {
+      comments.value = res.data.comments;
+    } else {
+      comments.value = []; // fallback
+    }
+  } catch (err) {
+    console.error("Error fetching comments:", err);
   }
 }
+
+async function sendComment() {
+  token.value = localStorage.getItem("token");
+  try {
+    const res = await axios.post(`${backendUrl}/api/comments/${props.data.id}`, {
+      comment: newComment.value
+    }, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
+    });
+
+    let createdComment = res.data;
+
+    // 🔒 Fallback ถ้า User ไม่ถูกส่งกลับมา
+    if (!createdComment.User) {
+      createdComment.User = {
+        firstname: "You",
+        lastname: "",
+        profile_pic: null,
+      };
+    }
+
+    if (!Array.isArray(comments.value)) {
+      comments.value = [];
+    }
+
+    comments.value.push(createdComment);
+    newComment.value = "";
+  } catch (error) {
+    console.error("Error posting comment:", error);
+  }
+}
+
+onMounted(() => {
+  fetchComments();
+});
 </script>

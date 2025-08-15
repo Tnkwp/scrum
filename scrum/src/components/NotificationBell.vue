@@ -22,73 +22,90 @@
       </div>
       <ul class="max-h-64 overflow-y-auto divide-y divide-gray-200">
         <li
-          v-for="(item, index) in notifications"
-          :key="index"
-          class="flex items-start gap-3 p-3 hover:bg-gray-50"
+          v-for="item in notifications"
+          :key="item.id"
+          class="flex items-start gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+          @click="markAsRead(item)"
         >
-          <!-- Avatar -->
-          <!-- <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0"></div> -->
-
-          <!-- Message -->
           <div class="flex-1">
             <p class="text-gray-800">
-              <!-- <span class="font-bold" v-html="item.userName"></span> -->
               <span v-html="item.message"></span>
             </p>
             <div class="flex items-center gap-1 text-xs text-gray-500">
               <span>{{ item.time }}</span>
               <span
                 v-if="item.status === 'unread'"
-                class="w-2 h-2 bg-black rounded-full inline-block"
+                class="w-2 h-2 bg-green-200 rounded-full inline-block"
               ></span>
             </div>
           </div>
         </li>
       </ul>
+      <button
+        class="w-full border-t h-7 flex items-center justify-center hover:bg-green-200 cursor-pointer"
+        @click="allnoti"
+      >
+        <span>ดูข้อความทั้งหมด</span>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
+import { io } from "socket.io-client";
 import axios from "axios";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
+const router = useRouter();
 const notifications = ref([]);
 const showNotification = ref(false);
-const token = ref(null);
+const token = ref(localStorage.getItem("token"));
 let timer = null;
 
 const toggleNotification = () => {
   showNotification.value = !showNotification.value;
 };
 
-const handleClickOutside = (e) => {
-  const bell = document.querySelector("img[src='/bell.png']");
-  const dropdown = document.querySelector(".absolute.right-0.mt-2.w-80");
-  if (
-    showNotification.value &&
-    !bell?.contains(e.target) &&
-    !dropdown?.contains(e.target)
-  ) {
-    showNotification.value = false;
+// --- Socket.IO setup ---
+let socket = null;
+const user = ref(null);
+
+const notify = (message) => {
+  if (!("Notification" in window)) return alert(message);
+  if (Notification.permission === "granted") {
+    new Notification(message);
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then((perm) => {
+      if (perm === "granted") new Notification(message);
+      else alert(message);
+    });
+  } else {
+    alert(message);
   }
 };
 
-const fetchNotifications = async () => {
-  token.value = localStorage.getItem("token");
+// --- Fetch user profile ---
+const fetchUserProfile = async () => {
   if (!token.value) return;
+  try {
+    const res = await axios.get(`${backendUrl}/api/users/profile`, {
+      headers: { Authorization: `Bearer ${token.value}` },
+    });
+    user.value = res.data.user;
+  } catch (err) {
+    console.error("Failed to fetch user", err);
+  }
+};
 
+// --- Fetch notifications ---
+const fetchNotifications = async () => {
+  if (!token.value) return;
   try {
     const res = await axios.get(`${backendUrl}/api/notifications`, {
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      withCredentials: true,
+      headers: { Authorization: `Bearer ${token.value}` },
     });
-
     const list = Array.isArray(res.data)
       ? res.data
       : res.data.notifications || res.data.data || [];
@@ -97,49 +114,44 @@ const fetchNotifications = async () => {
       ...item,
       rawTime: item.created_at,
       time: formatTime(item.created_at),
-      // userName: item.user_name || "Firstname Lastname", // แก้ให้ดึงจาก backend
     }));
   } catch (err) {
     console.error("Error fetching notifications:", err);
   }
 };
 
-// ฟังก์ชันแปลงเวลาเป็น relative time
+// --- Mark as read ---
+const markAsRead = async (item) => {
+  if (item.status !== "unread") return;
+  try {
+    await axios.patch(
+      `${backendUrl}/api/notifications/${item.id}`,
+      { status: "read" },
+      { headers: { Authorization: `Bearer ${token.value}` } }
+    );
+    item.status = "read";
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// --- Format time ---
 const formatTime = (isoDate) => {
   const date = new Date(isoDate);
   const now = new Date();
-  const diffInSeconds = Math.floor((now - date) / 1000);
-
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} วินาทีที่แล้ว`;
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} นาทีที่แล้ว`;
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return `${diffInHours} ชั่วโมงที่แล้ว`;
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays === 1) {
-    return "เมื่อวาน";
-  }
-  if (diffInDays < 7) {
-    return `${diffInDays} วันที่แล้ว`;
-  }
-
-  return date.toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return `${diff} วินาทีที่แล้ว`;
+  const minutes = Math.floor(diff / 60);
+  if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "เมื่อวาน";
+  if (days < 7) return `${days} วันที่แล้ว`;
+  return date.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
 };
 
-// อัพเดทเวลาทุก 1 นาที โดยไม่ยิง API
+// --- Update times every minute ---
 const updateTimes = () => {
   notifications.value = notifications.value.map((item) => ({
     ...item,
@@ -147,21 +159,70 @@ const updateTimes = () => {
   }));
 };
 
-const unreadCount = computed(
-  () => notifications.value.filter((n) => n.status === "unread").length
-);
+const unreadCount = computed(() => notifications.value.filter((n) => n.status === "unread").length);
 
-onMounted(() => {
-  fetchNotifications();
-  timer = setInterval(() => {
-    fetchNotifications();
-    updateTimes();
-  }, 60000);
+const handleClickOutside = (e) => {
+  const bell = document.querySelector("img[src='/bell.png']");
+  const dropdown = document.querySelector(".absolute.right-0.mt-2.w-80");
+  if (showNotification.value && !bell?.contains(e.target) && !dropdown?.contains(e.target)) {
+    showNotification.value = false;
+  }
+};
+
+function allnoti() {
+  showNotification.value = false;
+  router.push("/allnotification");
+}
+
+onMounted(async () => {
+  await fetchUserProfile();
+  await fetchNotifications();
+
+  // Connect socket if user exists
+  if (user.value?.id) {
+    socket = io(backendUrl, {
+      autoConnect: true,
+      auth: { token: `Bearer ${token.value}` },
+    });
+
+    socket.emit("join", user.value.id);
+
+    socket.on("notification", (data) => {
+      notifications.value.unshift({
+        ...data,
+        rawTime: data.created_at,
+        time: formatTime(data.created_at),
+      });
+      notify(data.message);
+    });
+
+    socket.on("notification:update", fetchNotifications);
+  }
+
+  timer = setInterval(updateTimes, 60000);
   document.addEventListener("click", handleClickOutside);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   if (timer) clearInterval(timer);
+  if (socket) {
+    socket.off("notification");
+    socket.off("notification:update");
+    socket.disconnect();
+  }
 });
 </script>
+
+
+<style scoped>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+</style>

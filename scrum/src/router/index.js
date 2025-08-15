@@ -10,7 +10,7 @@ import History from "../views/history.vue"
 import EditProfile from "../views/EditProfile.vue";
 import Homepage from "../views/Homepage.vue";
 import Member from "../views/perspective/Member.vue";
-
+import Notification from "../views/notification.vue";
 
 
 const routes = [
@@ -72,6 +72,11 @@ const routes = [
     path: "/:pathMatch(.*)*",
     name: "NotFound",
     component: NotFound,
+  },
+  {
+    path: "/allnotification",
+    name: "Notification",
+    component: Notification,
   },
 ];
 

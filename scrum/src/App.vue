@@ -12,7 +12,7 @@ import Nav from "./components/nav.vue";
 const route = useRoute();
 const isLogin = computed(() => 
   route.name === "Login" || route.path === "/"
-  || route.name === "Register" || route.path === "/forgot-password"
+  || route.name === "Register" || route.path === "/forgot-password" || route.path === "/verify-otp" || route.path === "/re-password"
 );
 </script>
 <style scoped>

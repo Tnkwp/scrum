@@ -11,7 +11,8 @@ import EditProfile from "../views/EditProfile.vue";
 import Homepage from "../views/Homepage.vue";
 import Member from "../views/perspective/Member.vue";
 import Notification from "../views/notification.vue";
-
+import VerifyOTP from "../views/VerifyOTP.vue";
+import RePassword from "../views/RePassword.vue";
 
 const routes = [
   {
@@ -52,6 +53,16 @@ const routes = [
     path: "/forgot-password",
     name: "Forget",
     component: Forget,
+  },
+  {
+    path: "/verify-otp",
+    name: "VerifyOTP",
+    component: VerifyOTP,
+  },
+  {
+    path: "/re-password",
+    name: "RePassword",
+    component: RePassword,
   },
   {
     path: "/member/:id",

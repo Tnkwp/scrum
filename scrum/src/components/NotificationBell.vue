@@ -48,6 +48,16 @@
         <span>ดูข้อความทั้งหมด</span>
       </button>
     </div>
+
+     <div class="fixed bottom-4 right-4 space-y-2 z-50">
+    <div
+      v-for="t in toasts"
+      :key="t.id"
+      class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in"
+    >
+      {{ t.message }}
+    </div>
+  </div>
   </div>
 </template>
 
@@ -71,20 +81,36 @@ const toggleNotification = () => {
 // --- Socket.IO setup ---
 let socket = null;
 const user = ref(null);
+const toasts = ref([]);
 
 const notify = (message) => {
-  if (!("Notification" in window)) return alert(message);
+  if (!("Notification" in window)) {
+    addToast(message);
+    return;
+  }
+
   if (Notification.permission === "granted") {
     new Notification(message);
   } else if (Notification.permission !== "denied") {
     Notification.requestPermission().then((perm) => {
-      if (perm === "granted") new Notification(message);
-      else alert(message);
+      if (perm === "granted") {
+        new Notification(message);
+      } else {
+        addToast(message);
+      }
     });
   } else {
-    alert(message);
+    addToast(message);
   }
 };
+
+function addToast(message) {
+  const id = Date.now();
+  toasts.value.push({ id, message });
+  setTimeout(() => {
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+  }, 3000); // หายไปเองหลัง 3 วินาที
+}
 
 // --- Fetch user profile ---
 const fetchUserProfile = async () => {
@@ -224,5 +250,19 @@ onBeforeUnmount(() => {
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease;
 }
 </style>

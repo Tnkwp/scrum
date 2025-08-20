@@ -65,7 +65,7 @@ const routes = [
     component: RePassword,
   },
   {
-    path: "/member/:id",
+    path: "/project/:id",
     name: "Member",
     component: Member,
   },

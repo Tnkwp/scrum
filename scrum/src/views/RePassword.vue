@@ -107,7 +107,7 @@ const handleReset = async () => {
     localStorage.removeItem("resetToken")
 
     // ✅ กลับไปหน้า Login
-    router.push({ name: "login" })
+    router.push('/')
   } catch (err) {
     Swal.fire({
       icon: "error",

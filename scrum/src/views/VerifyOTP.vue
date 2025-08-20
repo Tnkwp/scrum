@@ -103,6 +103,7 @@ const handleVerify = async () => {
   try {
     // ส่ง OTP ไป backend
     const res = await axios.post(`${backendUrl}/api/users/verify-otp`, {
+      email: email.value,
       otp: otp(),
     });
 

@@ -104,7 +104,13 @@ async function login() {
       confirmButtonColor: "#56DFCF",
     });
 
-    localStorage.setItem("token", res.data.token);
+    if (localStorage.getItem("token")){
+      localStorage.removeItem("token")
+      localStorage.setItem("token", res.data.token);
+    } else {
+      localStorage.setItem("token", res.data.token);
+    }
+
 
     router.push("/homepage");
   } catch (error) {

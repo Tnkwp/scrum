@@ -113,7 +113,7 @@ function goToProjectPage() {
   const userPosition = currentUser?.position || "Member";
 
   router.push({
-    path: `/member/${currentUserId}`,
+    path: `/project/${props.projectId}`,
     query: {
       position: userPosition,
       projectId: props.projectId,

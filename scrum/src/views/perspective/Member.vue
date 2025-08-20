@@ -133,7 +133,6 @@
           v-if="showPopupp"
           :visible="showPopupp"
           :data="selectedMember"
-          :socket="socket"
           @close="showPopupp = false"
         />
 
@@ -685,6 +684,7 @@ const fetchScrumData = async () => {
       bad: scrum.bad,
       try: scrum.try,
       next_sprint: scrum.next_sprint,
+      user_id: scrum.user.id,
       firstname: scrum.user.firstname,
       lastname: scrum.user.lastname,
       profile_pic: scrum.user.profile_pic,

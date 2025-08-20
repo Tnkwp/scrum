@@ -132,9 +132,10 @@
         <div
           v-for="comment in comments"
           :key="comment.id"
-          class="flex items-start space-x-2"
+          class="flex items-start justify-between space-x-2 group"
         >
-          <div>
+          <!-- ส่วนแสดงข้อมูล comment -->
+          <div class="flex-1">
             <div class="flex gap-2 items-center">
               <img
                 :src="comment.User?.profile_pic || '/user.png'"
@@ -146,7 +147,39 @@
               </p>
             </div>
             <div>
-              <p class="text-sm text-gray-700">{{ comment.comment }}</p>
+              <p class="text-sm text-gray-700">
+                {{
+                  typeof comment.comment === "string"
+                    ? comment.comment
+                    : JSON.stringify(comment.comment)
+                }}
+              </p>
+            </div>
+          </div>
+
+          <!-- ปุ่ม 3 จุด -->
+          <div class="relative">
+            <div v-if="comment.user_id == userStore.user.id" class="relative">
+              <button @click="toggleMenu(comment.id)" class="">⋮</button>
+
+              <!-- เมนูแก้ไข/ลบ -->
+              <div
+                v-if="openMenuId === comment.id"
+                class="absolute right-0 mt-1 w-28 bg-white border rounded shadow-md z-50"
+              >
+                <button
+                  class="block w-full text-left px-3 py-1 hover:bg-gray-100 text-sm"
+                  @click="editComment(comment)"
+                >
+                  ✏️ แก้ไข
+                </button>
+                <button
+                  class="block w-full text-left px-3 py-1 hover:bg-red-100 text-sm text-red-600"
+                  @click="deleteComment(comment.id)"
+                >
+                  🗑️ ลบ
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -157,11 +190,23 @@
         <input
           v-model="newComment"
           type="text"
-          placeholder="Sent..."
+          :placeholder="editingCommentId ? 'แก้ไขคอมเมนต์...' : 'Sent...'"
           class="flex-1 border rounded-full px-3 py-1 text-sm"
-          @keydown.enter="sendComment"
+          @keydown.enter="editingCommentId ? updateComment() : sendComment()"
         />
-        <button @click="sendComment" class="ml-2 text-2xl">➤</button>
+        <button
+          @click="editingCommentId ? updateComment() : sendComment()"
+          class="ml-2 text-2xl"
+        >
+          ➤
+        </button>
+        <button
+          v-if="editingCommentId"
+          @click="cancelEdit"
+          class="ml-2 text-sm text-gray-500"
+        >
+          ❌
+        </button>
       </div>
     </div>
   </div>
@@ -172,6 +217,8 @@ import { ref, onMounted } from "vue";
 import { defineProps, defineEmits } from "vue";
 import axios from "axios";
 import { useRoute } from "vue-router";
+import { useUserStore } from "../stores/userStore.js";
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const dailyScrumId = route.params.id;
@@ -179,16 +226,17 @@ const comments = ref([]);
 const newComment = ref("");
 const token = ref(null);
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-
+const openMenuId = ref(null);
+const userStore = useUserStore();
+const editingCommentId = ref(null);
 const props = defineProps({
   visible: Boolean,
   data: Object,
-  socket: Object,
-  userId: String,
 });
 
-console.log(dailyScrumId);
-console.log(props.data.id);
+// console.log("userID",userStore.user)
+// console.log(dailyScrumId);
+// console.log(props.data);
 
 const emit = defineEmits(["close"]);
 
@@ -206,7 +254,7 @@ async function fetchComments() {
     if (Array.isArray(res.data.comments)) {
       comments.value = res.data.comments;
     } else {
-      comments.value = []; // fallback
+      comments.value = [];
     }
   } catch (err) {
     console.error("Error fetching comments:", err);
@@ -216,32 +264,36 @@ async function fetchComments() {
 async function sendComment() {
   token.value = localStorage.getItem("token");
   try {
-    const res = await axios.post(`${backendUrl}/api/comments/${props.data.id}`, {
-      comment: newComment.value
-    }, {
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      withCredentials: true,
-    });
+    const res = await axios.post(
+      `${backendUrl}/api/comments/${props.data.id}`,
+      { comment: newComment.value },
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: true,
+      }
+    );
 
-    let createdComment = res.data;
+    // ✅ เช็คว่า response ห่อ object ไว้หรือไม่
+    let createdComment = res.data.comment || res.data;
 
-    // 🔒 Fallback ถ้า User ไม่ถูกส่งกลับมา
     if (!createdComment.User) {
       createdComment.User = {
-        firstname: "You",
-        lastname: "",
-        profile_pic: null,
+        firstname: userStore.user.firstname || "You",
+        lastname: userStore.user.lastname || "",
+        profile_pic: userStore.user.profile_pic || null,
       };
     }
 
-    if (!Array.isArray(comments.value)) {
-      comments.value = [];
-    }
+    comments.value.push({
+      id: createdComment.id,
+      comment: String(createdComment.comment), // ✅ ให้เป็น string แน่นอน
+      User: createdComment.User,
+      user_id: createdComment.user_id,
+    });
 
-    comments.value.push(createdComment);
     newComment.value = "";
   } catch (error) {
     console.error("Error posting comment:", error);
@@ -251,4 +303,98 @@ async function sendComment() {
 onMounted(() => {
   fetchComments();
 });
+
+function toggleMenu(id) {
+  openMenuId.value = openMenuId.value === id ? null : id;
+}
+
+async function editComment(comment) {
+  editingCommentId.value = comment.id;
+  newComment.value = comment.comment; // preload ข้อความเก่าใน input
+  openMenuId.value = null;
+}
+
+async function updateComment() {
+  if (!newComment.value.trim()) return;
+
+  token.value = localStorage.getItem("token");
+
+  try {
+    await axios.put(
+      `${backendUrl}/api/comments/${editingCommentId.value}`,
+      { comment: newComment.value },
+      {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: true,
+      }
+    );
+
+    // อัปเดตใน state
+    const target = comments.value.find((c) => c.id === editingCommentId.value);
+    if (target) target.comment = newComment.value;
+
+    // reset state
+    newComment.value = "";
+    editingCommentId.value = null;
+  } catch (err) {
+    console.error("Error editing comment:", err);
+  }
+}
+
+function cancelEdit() {
+  newComment.value = "";
+  editingCommentId.value = null;
+}
+
+async function deleteComment(id) {
+  token.value = localStorage.getItem("token");
+
+  // แสดงกล่องยืนยัน
+  const result = await Swal.fire({
+    title: "คุณแน่ใจหรือไม่?",
+    text: "คอมเมนต์นี้จะถูกลบและไม่สามารถกู้คืนได้!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "ลบ",
+    cancelButtonText: "ยกเลิก",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await axios.delete(`${backendUrl}/api/comments/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
+    });
+
+    // ลบออกจาก state
+    comments.value = comments.value.filter((c) => c.id !== id);
+    openMenuId.value = null;
+
+    // แจ้งเตือนสำเร็จ
+    Swal.fire({
+      icon: "success",
+      title: "ลบสำเร็จ",
+      text: "คอมเมนต์ถูกลบเรียบร้อยแล้ว",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    console.error("Error deleting comment:", err);
+
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถลบคอมเมนต์ได้ กรุณาลองใหม่อีกครั้ง",
+    });
+  }
+}
 </script>

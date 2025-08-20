@@ -197,7 +197,7 @@ const handleClickOutside = (e) => {
 
 function allnoti() {
   showNotification.value = false;
-  router.push("/allnotification");
+  router.push("/all-notifications");
 }
 
 onMounted(async () => {

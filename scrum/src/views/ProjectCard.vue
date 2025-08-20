@@ -112,12 +112,16 @@ function goToProjectPage() {
 
   const userPosition = currentUser?.position || "Member";
 
-  router.push({
-    path: `/project/${props.projectId}`,
-    query: {
+  // ✅ เก็บข้อมูลไว้ใน localStorage
+  localStorage.setItem(
+    "projectInfo",
+    JSON.stringify({
       position: userPosition,
       projectId: props.projectId,
-    },
-  });
+    })
+  );
+
+  // ✅ ไปแค่ path เฉย ๆ
+  router.push(`/project/${props.projectId}`);
 }
 </script>

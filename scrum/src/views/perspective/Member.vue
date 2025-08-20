@@ -159,7 +159,7 @@
                   <li v-for="member in notSubmittedUsers" :key="member.id">
                     - {{ member.firstname }} {{ member.lastname }} ({{
                       member.position
-                    }})
+                    }}) {{ member.scrum_point }} คะแนน
                   </li>
                 </ul>
               </div>
@@ -452,10 +452,13 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import EditProject from "../../components/EditProject.vue";
 
+const user = JSON.parse(localStorage.getItem("user")) || {};
+const userId = user.id;
+
 const route = useRoute();
 const router = useRouter();
-const position = route.query.position;
-const projectId = route.query.projectId;
+const projectId = route.params.id;
+const position = ref(null)
 const project = ref(null);
 const token = ref(null);
 const showPopup = ref(false);
@@ -488,7 +491,7 @@ const formData = ref({
   bad: "",
   try: "",
   next_sprint: "",
-  project_id: null, // <-- ค่าเริ่มต้น จะเซตทีหลัง
+  project_id: projectId, // <-- ค่าเริ่มต้น จะเซตทีหลัง
   created_at: "",
   files: [],
 });
@@ -561,9 +564,6 @@ const openEditModal = (id) => {
   showModal.value = true;
 };
 
-const fetchProjects = async () => {
-  // ดึงข้อมูลทั้งหมด
-};
 
 const handleUpdatedProject = (updatedProject) => {
   console.log("Project updated:", updatedProject);
@@ -571,16 +571,20 @@ const handleUpdatedProject = (updatedProject) => {
 };
 
 const fetchProject = async () => {
-  token.value = localStorage.getItem("token");
   try {
     const res = await axios.get(`${backendUrl}/api/projects/${projectId}`, {
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "ngrok-skip-browser-warning": "true",
-      },
+      headers: { Authorization: `Bearer ${token.value}` },
       withCredentials: true,
     });
     project.value = res.data.project;
+    allMembers.value = project.value.members || [];
+
+    const member = allMembers.value.find((m) => m.id === userId);
+    if (member) {
+      position.value = member.position; 
+    } else {
+      position.value = "Member";
+    }
   } catch (err) {
     console.error("Error fetching project:", err.message);
   }
@@ -669,11 +673,20 @@ const fetchScrumData = async () => {
         withCredentials: true,
       }
     );
-    // สมมุติว่า response = { scrums: [...] }
+
     const scrums = res.data.scrums;
 
-    // map ให้ง่ายต่อการใช้กับ template
-    scrumMemberss.value = res.data.scrums.map((scrum) => ({
+    // ✅ หาวันนี้ (ตัดเวลาออก เปรียบเทียบเฉพาะ yyyy-mm-dd)
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // ✅ กรองเฉพาะ created_at ของวันนี้
+    const todayScrums = scrums.filter(scrum => {
+      const createdDate = new Date(scrum.created_at).toISOString().split("T")[0];
+      return createdDate === todayStr;
+    });
+
+    // ✅ map เฉพาะที่เหลือหลังกรอง
+    scrumMemberss.value = todayScrums.map((scrum) => ({
       id: scrum.id,
       type: scrum.type,
       today: scrum.today_task,
@@ -736,7 +749,7 @@ onMounted(async () => {
     );
     allMembers.value = projectRes.data.project.members || [];
 
-    // 2. ดึงรายการ scrum ที่ส่งแล้ว
+    // 2. ดึงรายการ scrum ทั้งหมดของโปรเจกต์
     const scrumRes = await axios.get(
       `${backendUrl}/api/daily-scrum/project/${projectId}`,
       {
@@ -748,9 +761,18 @@ onMounted(async () => {
       }
     );
 
-    // 3. รวม user ที่ส่งแล้ว (ใช้ Set เพื่อป้องกันซ้ำ)
+    // 3. หาวันปัจจุบัน (yyyy-mm-dd)
+    const today = new Date().toISOString().split("T")[0];
+
+    // 4. filter scrum เฉพาะที่สร้างวันนี้
+    const todayScrums = scrumRes.data.scrums.filter((scrum) => {
+      const scrumDate = new Date(scrum.created_at).toISOString().split("T")[0];
+      return scrumDate === today;
+    });
+
+    // 5. รวม user ที่ส่งแล้ว (เฉพาะของวันนี้)
     const seenUserIds = new Set();
-    submittedUsers.value = scrumRes.data.scrums
+    submittedUsers.value = todayScrums
       .map((scrum) => scrum.user)
       .filter((user) => {
         if (!seenUserIds.has(user.id)) {
@@ -760,7 +782,7 @@ onMounted(async () => {
         return false;
       });
 
-    // 4. คำนวณคนที่ยังไม่ได้ส่ง
+    // 6. คำนวณคนที่ยังไม่ได้ส่งวันนี้
     notSubmittedUsers.value = allMembers.value.filter(
       (member) => !seenUserIds.has(member.id)
     );
@@ -803,6 +825,12 @@ const handleSubmit = async () => {
         "ngrok-skip-browser-warning": "true",
       },
       withCredentials: true,
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Success",
+      text: "Project marked as done!",
     });
 
     console.log("Submitted:", response.data);

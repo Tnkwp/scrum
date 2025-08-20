@@ -85,7 +85,7 @@ const routes = [
     component: NotFound,
   },
   {
-    path: "/allnotification",
+    path: "/all-notifications",
     name: "Notification",
     component: Notification,
   },

@@ -129,7 +129,7 @@
           </div>
         </div>
 
-        <ScrumPopup
+        <ScrumComment
           v-if="showPopupp"
           :visible="showPopupp"
           :data="selectedMember"
@@ -446,7 +446,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import io from "socket.io-client";
-import ScrumPopup from "../ScrumPopup.vue";
+import ScrumComment from "../ScrumComment.vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";

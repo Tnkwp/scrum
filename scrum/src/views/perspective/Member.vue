@@ -8,8 +8,8 @@
               <router-link to="/homepage">
                 <img src="/left-arrow.png" alt="" />
               </router-link>
-              <span>Project's Title:</span
-              ><span class="font-semibold">{{ project.title }}</span>
+              <span>Project's Title:</span>
+              <span class="font-semibold">{{ project.title }}</span>
             </div>
           </h1>
         </div>
@@ -17,6 +17,7 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <!-- Scrum Members -->
         <div class="lg:col-span-2 space-y-4">
           <div
             v-for="(member, index) in scrumMemberss"
@@ -26,20 +27,19 @@
             @mouseenter="handleMouseEnter(index)"
             @mouseleave="handleMouseLeave"
           >
-            <!-- จุด 3 จุด: แสดงเฉพาะตอน hover -->
+            <!-- จุด 3 จุด -->
             <div
               class="absolute top-2 right-2 z-20"
               v-if="hoveredIndex === index"
               @click.stop
             >
               <button
-                class="text-gray-500 w-6 rounded-full hover:text-black hover:rounded-full hover:bg-gray-100 hover:w-6 focus:outline-none"
+                class="text-gray-500 w-6 rounded-full hover:text-black hover:bg-gray-100 focus:outline-none"
                 @click="toggleDropdown(index)"
               >
                 ⋮
               </button>
 
-              <!-- เมนู dropdown: แสดงเมื่อคลิก ⋮ -->
               <div
                 v-if="activeDropdownIndex === index"
                 class="absolute right-0 mt-2 w-28 bg-white border border-gray-300 rounded shadow-md"
@@ -59,7 +59,7 @@
               </div>
             </div>
 
-            <!-- ส่วนเดิมของการ์ด -->
+            <!-- การ์ด -->
             <div class="flex justify-between items-center mb-2">
               <div class="flex items-center space-x-3">
                 <img
@@ -70,9 +70,9 @@
                 />
                 <div class="font-semibold">
                   {{ member.firstname }} {{ member.lastname }}
-                  <span class="text-[12px] font-thin">{{
-                    formatDate(member.created_at)
-                  }}</span>
+                  <span class="text-[12px] font-thin">
+                    {{ formatDate(member.created_at) }}
+                  </span>
                 </div>
               </div>
               <span class="bg-gray-200 text-xs px-3 py-1 rounded-full">
@@ -136,6 +136,7 @@
           @close="showPopupp = false"
         />
 
+        <!-- Summary -->
         <div>
           <div class="bg-white rounded-lg p-4 shadow">
             <h2 class="text-xl font-semibold mb-4 text-center">
@@ -173,7 +174,7 @@
             </div>
           </div>
 
-          <!-- Conditional Buttons -->
+          <!-- Buttons -->
           <div class="space-y-4 mt-6">
             <template v-if="position === 'Project Manager'">
               <div class="flex gap-3">
@@ -202,15 +203,14 @@
               >
                 Create Daily-scrum
               </button>
-              <div>
-                <button
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  @click="goToHistory"
-                >
-                  History
-                </button>
-              </div>
+              <button
+                @click="goToHistory"
+                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+              >
+                History
+              </button>
             </template>
+
             <template v-else>
               <button
                 @click="showPopup = true"
@@ -218,14 +218,12 @@
               >
                 Create Daily-scrum
               </button>
-              <div>
-                <button
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  @click="goToHistory"
-                >
-                  History
-                </button>
-              </div>
+              <button
+                @click="goToHistory"
+                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+              >
+                History
+              </button>
             </template>
           </div>
         </div>
@@ -239,360 +237,80 @@
       @submit="handleUpdatedProject"
     />
 
-    <!-- Popup Modal -->
-    <div
+    <!-- Popup แยกออกมาเป็น component -->
+    <ScrumForm
       v-if="showPopup"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div class="space-y-4">
-          <!-- Daily-scrum Type -->
-          <div class="flex justify-between">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Daily-scrum Type</label
-              >
-              <select
-                v-model="formData.type"
-                class="w-full border border-gray-300 rounded px-5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="daily">Daily scrum</option>
-                <option value="friday">Friday Scrum</option>
-                <option value="retrospective">Retrospective</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Date</label
-              >
-              <input
-                type="date"
-                v-model="formData.created_at"
-                :min="canSubmitYesterday ? minDate : maxDate"
-                :max="maxDate"
-                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          <!-- Dynamic fields based on scrumType -->
-          <div v-if="formData.type === 'daily'">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >สิ่งที่ทำวันนี้</label
-            >
-            <textarea
-              v-model="formData.today_task"
-              class="w-full border rounded px-3 py-2 h-20"
-              placeholder="สิ่งที่ทำวันนี้..."
-            />
-            <div class="flex gap-2 items-center mb-1 mt-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-                >ปัญหาวันนี้</label
-              >
-              <select
-                v-model="formData.problem_level"
-                class="border rounded px-2 py-2"
-              >
-                <option disabled value="">-- เลือกระดับความรุนแรง --</option>
-                <option>minor</option>
-                <option>moderate</option>
-                <option>critical</option>
-              </select>
-            </div>
-            <textarea
-              v-model="formData.problem"
-              class="w-full border rounded px-3 py-2 h-20"
-              placeholder="ปัญหาที่เจอ..."
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-              >พรุ่งนี้ทำอะไร</label
-            >
-            <textarea
-              v-model="formData.tomorrow_task"
-              class="w-full border rounded px-3 py-2 h-20"
-              placeholder="สิ่งที่จะทำพรุ่งนี้..."
-            />
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
-                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
-              </label>
-              <input
-                type="file"
-                multiple
-                @change="handleFileChange"
-                class="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-
-          <div v-else-if="formData.type === 'friday'">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >สิ่งที่ทำวันนี้</label
-            >
-            <textarea
-              v-model="formData.today_task"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Good</label
-            >
-            <textarea
-              v-model="formData.good"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Bad</label
-            >
-            <textarea
-              v-model="formData.bad"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Try</label
-            >
-            <textarea
-              v-model="formData.try"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Next Sprint</label
-            >
-            <textarea
-              v-model="formData.next_sprint"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
-                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
-              </label>
-              <input
-                type="file"
-                multiple
-                @change="handleFileChange"
-                class="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-
-          <div v-else-if="formData.type === 'retrospective'">
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >สิ่งที่ทำวันนี้</label
-            >
-            <textarea
-              v-model="formData.today_task"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Good</label
-            >
-            <textarea
-              v-model="formData.good"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Bad</label
-            >
-            <textarea
-              v-model="formData.bad"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Try</label
-            >
-            <textarea
-              v-model="formData.try"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Next Sprint</label
-            >
-            <textarea
-              v-model="formData.next_sprint"
-              class="w-full border rounded px-3 py-2 h-20"
-            />
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
-                แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
-              </label>
-              <input
-                type="file"
-                multiple
-                @change="handleFileChange"
-                class="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="flex justify-end gap-2">
-            <button
-              @click="handleCancel"
-              class="bg-[#D1FAE5] text-black py-2 px-4 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              @click="handleSubmit"
-              class="bg-[#10B981] text-[#1F2937] py-2 px-4 rounded"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    :visible="showPopup"
+    :projectId="Number(projectId)"
+    :canSubmitYesterday="canSubmitYesterday"
+    @close="showPopup = false"
+    @submitted="handleSubmitted"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import io from "socket.io-client";
-import ScrumComment from "../ScrumComment.vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
+
+import ScrumComment from "../ScrumComment.vue";
 import EditProject from "../../components/EditProject.vue";
+import ScrumForm from "../../components/ScrumForm.vue";
 
 const user = JSON.parse(localStorage.getItem("user")) || {};
 const userId = user.id;
-const canSubmitYesterday = ref(true);
-const formatDateForInput = (d) => d.toISOString().split("T")[0];
+const token = ref(localStorage.getItem("token"));
+
 const route = useRoute();
 const router = useRouter();
 const projectId = route.params.id;
-const position = ref(null);
+
 const project = ref(null);
-const token = ref(null);
-const showPopup = ref(false);
-const showPopupp = ref(false);
-const selectedMember = ref(null);
-const showModal = ref(false);
-const selectedProject = ref(null);
-const currentProjectId = ref(null);
+const position = ref(null);
 const scrumMemberss = ref([]);
 const allMembers = ref([]);
 const submittedUsers = ref([]);
 const notSubmittedUsers = ref([]);
-const fileInputs = ref([]);
+
 const hoveredIndex = ref(null);
 const activeDropdownIndex = ref(null);
 
-// const socket = io('http://localhost:3000');
+const showPopup = ref(false);
+const showPopupp = ref(false);
+const selectedMember = ref(null);
+
+const showModal = ref(false);
+const selectedProject = ref(null);
+const currentProjectId = ref(null);
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-const today = new Date();
-const yesterday = new Date();
-yesterday.setDate(today.getDate() - 1);
-
-const maxDate = formatDateForInput(today);
-const minDate = formatDateForInput(yesterday);
-
-const formData = ref({
-  type: "daily",
-  today_task: "",
-  problem: "",
-  problem_level: "",
-  tomorrow_task: "",
-  good: "",
-  bad: "",
-  try: "",
-  next_sprint: "",
-  project_id: projectId, // <-- ค่าเริ่มต้น จะเซตทีหลัง
-  created_at: "",
-  files: [],
-});
-
-formData.value.created_at = formatDateForInput(today);
-
-const getCurrentUserId = async () => {
-  const fromLocal = Number(localStorage.getItem("user_id"));
-  if (fromLocal) return fromLocal;
-
-  if (!token.value) return null;
-  try {
-    const res = await axios.get(`${backendUrl}/api/users/profile`, {
-      headers: { Authorization: `Bearer ${token.value}` },
-      withCredentials: true,
-    });
-    const id = res.data?.user?.id ?? res.data?.id;
-    if (id) localStorage.setItem("user_id", id);
-    return id ?? null;
-  } catch (e) {
-    console.error("fetch profile failed:", e);
-    return null;
-  }
-};
+function handleSubmitted() {
+  window.location.reload();
+}
 
 function handleMouseEnter(index) {
   hoveredIndex.value = index;
 }
-
 function handleMouseLeave() {
   hoveredIndex.value = null;
 }
-
 function toggleDropdown(index) {
   activeDropdownIndex.value =
     activeDropdownIndex.value === index ? null : index;
 }
-
 function editMember(member) {
   console.log("Edit:", member);
 }
-
-async function deleteMember(member) {
-  token.value = localStorage.getItem("token");
-
-  const result = await Swal.fire({
-    title: `ต้องการลบ Scrum ของ ${member.firstname} ${member.lastname} หรือไม่?`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#aaa",
-    confirmButtonText: "ลบ",
-    cancelButtonText: "ยกเลิก",
-  });
-
-  if (!result.isConfirmed) return;
-
-  try {
-    const id = member.id;
-    const response = await axios.delete(`${backendUrl}/api/daily-scrum/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      withCredentials: true,
-    });
-
-    await Swal.fire({
-      icon: "success",
-      title: "ลบสำเร็จ",
-      text: `${member.firstname} ${member.lastname} ถูกลบเรียบร้อยแล้ว`,
-      timer: 1500,
-      showConfirmButton: false,
-    });
-
-    location.reload();
-  } catch (error) {
-    console.error("Error deleting scrum:", error);
-    Swal.fire({
-      icon: "error",
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถลบรายการได้ กรุณาลองใหม่",
-    });
-  }
+function openPopup(member) {
+  selectedMember.value = member;
+  showPopupp.value = true;
 }
-
 const openEditModal = (id) => {
   currentProjectId.value = id;
   showModal.value = true;
-};
-
-const handleUpdatedProject = (updatedProject) => {
-  console.log("Project updated:", updatedProject);
-  fetchProject();
 };
 
 const fetchProject = async () => {
@@ -605,15 +323,108 @@ const fetchProject = async () => {
     allMembers.value = project.value.members || [];
 
     const member = allMembers.value.find((m) => m.id === userId);
-    if (member) {
-      position.value = member.position;
-    } else {
-      position.value = "Member";
-    }
+    position.value = member ? member.position : "Member";
   } catch (err) {
     console.error("Error fetching project:", err.message);
   }
 };
+
+const fetchScrumData = async () => {
+  try {
+    const res = await axios.get(
+      `${backendUrl}/api/daily-scrum/project/${projectId}`,
+      {
+        headers: { Authorization: `Bearer ${token.value}` },
+        withCredentials: true,
+      }
+    );
+    const scrums = res.data.scrums;
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    scrumMemberss.value = scrums
+      .filter((scrum) => {
+        const createdDate = new Date(scrum.created_at)
+          .toISOString()
+          .split("T")[0];
+        return createdDate === todayStr;
+      })
+      .map((scrum) => ({
+        id: scrum.id,
+        type: scrum.type,
+        today: scrum.today_task,
+        problem: scrum.problem,
+        problem_level: scrum.problem_level,
+        tomorrow: scrum.tomorrow_task,
+        good: scrum.good,
+        bad: scrum.bad,
+        try: scrum.try,
+        next_sprint: scrum.next_sprint,
+        user_id: scrum.user.id,
+        firstname: scrum.user.firstname,
+        lastname: scrum.user.lastname,
+        profile_pic: scrum.user.profile_pic,
+        role: scrum.user.position,
+        file: scrum.files,
+        created_at: scrum.created_at,
+      }));
+
+    // Submitted / Not submitted
+    const todayScrums = scrums.filter((scrum) => {
+      const scrumDate = new Date(scrum.created_at).toISOString().split("T")[0];
+      return scrumDate === todayStr;
+    });
+    const seenUserIds = new Set();
+    submittedUsers.value = todayScrums
+      .map((scrum) => scrum.user)
+      .filter((user) => {
+        if (!seenUserIds.has(user.id)) {
+          seenUserIds.add(user.id);
+          return true;
+        }
+        return false;
+      });
+    notSubmittedUsers.value = allMembers.value.filter(
+      (member) => !seenUserIds.has(member.id)
+    );
+  } catch (err) {
+    console.error("Error fetching scrum data:", err);
+  }
+};
+
+async function deleteMember(member) {
+  const result = await Swal.fire({
+    title: `ต้องการลบ Scrum ของ ${member.firstname} ${member.lastname} หรือไม่?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#aaa",
+    confirmButtonText: "ลบ",
+    cancelButtonText: "ยกเลิก",
+  });
+  if (!result.isConfirmed) return;
+
+  try {
+    await axios.delete(`${backendUrl}/api/daily-scrum/${member.id}`, {
+      headers: { Authorization: `Bearer ${token.value}` },
+      withCredentials: true,
+    });
+    await Swal.fire({
+      icon: "success",
+      title: "ลบสำเร็จ",
+      text: `${member.firstname} ${member.lastname} ถูกลบเรียบร้อยแล้ว`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+    fetchScrumData();
+  } catch (error) {
+    console.error("Error deleting scrum:", error);
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถลบรายการได้ กรุณาลองใหม่",
+    });
+  }
+}
 
 const handleDelete = async () => {
   const confirm = await Swal.fire({
@@ -626,50 +437,36 @@ const handleDelete = async () => {
     confirmButtonText: "ลบโปรเจกต์",
     cancelButtonText: "ยกเลิก",
   });
+  if (!confirm.isConfirmed) return;
 
-  if (confirm.isConfirmed) {
-    token.value = localStorage.getItem("token");
-    try {
-      await axios.delete(`${backendUrl}/api/projects/${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      });
-
-      Swal.fire("ลบสำเร็จ!", "โปรเจกต์ถูกลบเรียบร้อยแล้ว", "success");
-      router.push("/homepage");
-    } catch (err) {
-      console.error("Error deleting project:", err.message);
-      Swal.fire("เกิดข้อผิดพลาด", err.message, "error");
-    }
+  try {
+    await axios.delete(`${backendUrl}/api/projects/${projectId}`, {
+      headers: { Authorization: `Bearer ${token.value}` },
+      withCredentials: true,
+    });
+    Swal.fire("ลบสำเร็จ!", "โปรเจกต์ถูกลบเรียบร้อยแล้ว", "success");
+    router.push("/homepage");
+  } catch (err) {
+    console.error("Error deleting project:", err.message);
+    Swal.fire("เกิดข้อผิดพลาด", err.message, "error");
   }
 };
 
 const markProjectAsDone = async () => {
-  token.value = localStorage.getItem("token");
   try {
-    const response = await axios.patch(
+    await axios.patch(
       `${backendUrl}/api/projects/${projectId}`,
+      { status: "done" },
       {
-        status: "done",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: { Authorization: `Bearer ${token.value}` },
         withCredentials: true,
       }
     );
-
     Swal.fire({
       icon: "success",
       title: "Success",
       text: "Project marked as done!",
     });
-
     router.push("/homepage");
   } catch (error) {
     console.error("Error updating project status:", error);
@@ -681,218 +478,26 @@ const markProjectAsDone = async () => {
   }
 };
 
-onMounted(() => {
-  if (projectId) fetchProject();
-});
-
-const fetchScrumData = async () => {
-  token.value = localStorage.getItem("token");
-  const projectId = route.params.id;
-
-  try {
-    const res = await axios.get(
-      `${backendUrl}/api/daily-scrum/project/${projectId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }
-    );
-
-    const scrums = res.data.scrums;
-    const todayStr = new Date().toISOString().split("T")[0];
-
-    const todayScrums = scrums.filter((scrum) => {
-      const createdDate = new Date(scrum.created_at)
-        .toISOString()
-        .split("T")[0];
-      return createdDate === todayStr;
-    });
-
-    scrumMemberss.value = todayScrums.map((scrum) => ({
-      id: scrum.id,
-      type: scrum.type,
-      today: scrum.today_task,
-      problem: scrum.problem,
-      problem_level: scrum.problem_level,
-      tomorrow: scrum.tomorrow_task,
-      good: scrum.good,
-      bad: scrum.bad,
-      try: scrum.try,
-      next_sprint: scrum.next_sprint,
-      user_id: scrum.user.id,
-      firstname: scrum.user.firstname,
-      lastname: scrum.user.lastname,
-      profile_pic: scrum.user.profile_pic,
-      role: scrum.user.position,
-      file: scrum.files,
-      created_at: scrum.created_at,
-    }));
-  } catch (err) {
-    console.error("Error fetching scrum data:", err);
-  }
-};
-
-onMounted(async () => {
-  await fetchScrumData();
-
-  // ตรวจสอบว่าเปิดจาก notification แบบ new_comment
-  if (route.query.popup === "comment") {
-    const dailyScrumId = localStorage.getItem("daily_scrum_id");
-    if (dailyScrumId) {
-      // หา member ที่ตรงกับ dailyScrumId
-      const member = scrumMemberss.value.find(
-        (m) => m.id === Number(dailyScrumId)
-      );
-      if (member) {
-        openPopup(member);
-      }
-    }
-  }
-});
-
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
-  const day = String(date.getDate()).padStart(2, "0"); // เติม 0 ถ้าต่ำกว่า 10
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // เดือนเริ่มจาก 0 ต้อง +1
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
 };
-
 const getTodayDate = () => {
   const today = new Date();
   const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0"); // เดือนเริ่มที่ 0
+  const month = String(today.getMonth() + 1).padStart(2, "0");
   const year = today.getFullYear();
   return `${day}/${month}/${year}`;
 };
-
-onMounted(async () => {
-  token.value = localStorage.getItem("token");
-
-  try {
-    const currentUserId = await getCurrentUserId();
-
-    // ดึงสมาชิกและ scrum ของโปรเจกต์
-    const [projectRes, scrumRes] = await Promise.all([
-      axios.get(`${backendUrl}/api/projects/${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }),
-      axios.get(`${backendUrl}/api/daily-scrum/project/${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }),
-    ]);
-
-    allMembers.value = projectRes.data?.project?.members || [];
-    const scrums = scrumRes.data?.scrums || [];
-
-    // วันที่วันนี้และเมื่อวาน
-    const todayStr = formatDateForInput(today);
-    const yesterdayStr = formatDateForInput(yesterday);
-
-    // ตรวจสอบว่าส่งเมื่อวานหรือยัง
-    const sentYesterdayByThisUser = scrums.some((s) => {
-      const scrumDate = formatDateForInput(new Date(s.created_at));
-      const uid = s.user_id ?? s.user?.id;
-      return (
-        scrumDate === yesterdayStr &&
-        (currentUserId ? uid === currentUserId : true)
-      );
-    });
-    canSubmitYesterday.value = !sentYesterdayByThisUser;
-
-    // กรอง scrum วันนี้
-    const todayScrums = scrums.filter(
-      (s) => formatDateForInput(new Date(s.created_at)) === todayStr
-    );
-
-    // คนที่ส่งแล้ว
-    const seenUserIds = new Set();
-    submittedUsers.value = todayScrums
-      .map((s) => s.user ?? { id: s.user_id })
-      .filter((u) => {
-        const id = u?.id;
-        if (!id) return false;
-        if (!seenUserIds.has(id)) {
-          seenUserIds.add(id);
-          return true;
-        }
-        return false;
-      });
-
-    // คนที่ยังไม่ส่ง
-    notSubmittedUsers.value = allMembers.value.filter(
-      (m) => !seenUserIds.has(m.id)
-    );
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", error);
-  }
-});
-
-const openPopup = (member) => {
-  selectedMember.value = member;
-  showPopupp.value = true;
-};
-
-const handleFileChange = (e) => {
-  fileInputs.value = Array.from(e.target.files);
-};
-
-const handleSubmit = async () => {
-  const token = localStorage.getItem("token");
-
-  try {
-    const data = new FormData();
-    for (const key in formData.value) {
-      const value = formData.value[key];
-      if (value !== undefined && value !== null && value !== "") {
-        data.append(key, value);
-      }
-    }
-
-    const response = await axios.post(`${backendUrl}/api/daily-scrum`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      withCredentials: true,
-    });
-
-    Swal.fire({
-      icon: "success",
-      title: "Success",
-      text: "Project marked as done!",
-    });
-
-    showPopup.value = false;
-    location.reload();
-  } catch (error) {
-    console.error("Error submitting daily scrum:", error);
-  }
-};
-
-onMounted(() => {
-  const projectId = route.query.projectId;
-  if (projectId) {
-    formData.value.project_id = Number(projectId); // แปลงเป็น number (ตามที่ backend อาจต้องการ)
-  }
-});
-
-const handleCancel = () => {
-  showPopup.value = false;
-};
-
 const goToHistory = () => {
   router.push(`/history/${projectId}`);
 };
+
+onMounted(() => {
+  fetchProject();
+  fetchScrumData();
+});
 </script>

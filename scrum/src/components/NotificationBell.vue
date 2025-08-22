@@ -148,16 +148,42 @@ const fetchNotifications = async () => {
 
 // --- Mark as read ---
 const markAsRead = async (item) => {
-  if (item.status !== "unread") return;
-  try {
-    await axios.patch(
-      `${backendUrl}/api/notifications/${item.id}`,
-      { status: "read" },
-      { headers: { Authorization: `Bearer ${token.value}` } }
-    );
-    item.status = "read";
-  } catch (err) {
-    console.error(err);
+  // Mark as read ก่อน
+  if (item.status === "unread") {
+    try {
+      await axios.patch(
+        `${backendUrl}/api/notifications/${item.id}`,
+        { status: "read" },
+        { headers: { Authorization: `Bearer ${token.value}` } }
+      );
+      item.status = "read";
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+    }
+  }
+
+  // ปิด dropdown
+  showNotification.value = false;
+
+  // นำทางตาม type
+  switch (item.type) {
+    case "reminder":
+    case "late_notice":
+      localStorage.setItem("user_id", item.user_id);
+      router.push(`/project/${item.project_id}`);
+      break;
+
+    case "new_comment":
+      localStorage.setItem("user_id", item.user_id);
+      localStorage.setItem("daily_scrum_id", item.daily_scrum_id);
+      router.push({
+        path: `/project/${item.project_id}`,
+        query: { popup: "comment" }, 
+      });
+      break;
+
+    default:
+      console.warn("Unknown notification type:", item.type);
   }
 };
 

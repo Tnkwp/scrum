@@ -1,7 +1,16 @@
 <template>
   <div class="bg-[#F0FDF4] min-h-screen">
-    <div class="flex justify-center">
-      <span class="text-[16px] md:text-[22px] font-noto mt-[60px]">
+    <div class="relative flex items-center text-black h-[80px] pt-16">
+      <router-link
+        to="/homepage"
+        class="absolute left-0 top-1/2 -translate-y-1/2 pt-16"
+      >
+        <img src="/left-arrow.png" alt="" />
+      </router-link>
+
+      <span
+        class="absolute left-1/2 -translate-x-1/2 text-[16px] md:text-[22px] font-noto"
+      >
         การแจ้งเตือน
       </span>
     </div>
@@ -95,27 +104,52 @@ const fetchNotifications = async () => {
   }
 };
 
-
 const markAsRead = async (item) => {
-  if (item.status !== "unread") return; 
+  // ถ้าเป็น unread ให้ mark เป็น read ก่อน
+  if (item.status === "unread") {
+    try {
+      await axios.patch(
+        `${backendUrl}/api/notifications/${item.id}`,
+        { status: "read" },
+        {
+          headers: {
+            Authorization: `Bearer ${token.value}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: true,
+        }
+      );
+      item.status = "read";
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
+    }
+  }
 
-  try {
-    await axios.patch(
-      `${backendUrl}/api/notifications/${item.id}`,
-      { status: "read" },
-      {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }
-    );
-    // อัพเดทใน frontend ด้วย
-    item.status = "read";
-    router.push(`/member/${item.daily_scrum_id}`)
-  } catch (err) {
-    console.error("Error marking notification as read:", err);
+  // จัดการการนำทางตาม type
+  switch (item.type) {
+    case "reminder":
+    case "late_notice":
+      // เก็บ user_id ไว้ใน localStorage
+      localStorage.setItem("user_id", item.user_id);
+
+      // ไปหน้า project โดยส่ง project_id ผ่าน path
+      router.push(`/project/${item.project_id}`);
+      break;
+
+    case "new_comment":
+      // เก็บ user_id และ daily_scrum_id ไว้ใน localStorage
+      localStorage.setItem("user_id", item.user_id);
+      localStorage.setItem("daily_scrum_id", item.daily_scrum_id);
+
+      // ไปหน้า project และให้แสดง popup ตาม daily_scrum_id
+      router.push({
+        path: `/project/${item.project_id}`,
+        query: { popup: "comment" }, // ใช้ query เพื่อ trigger popup
+      });
+      break;
+
+    default:
+      console.warn("Unknown notification type:", item.type);
   }
 };
 
@@ -142,7 +176,7 @@ const deleteNotification = async (id) => {
       });
 
       // ลบออกจาก list
-      notifications.value = notifications.value.filter(n => n.id !== id);
+      notifications.value = notifications.value.filter((n) => n.id !== id);
 
       // แสดง success alert
       Swal.fire({

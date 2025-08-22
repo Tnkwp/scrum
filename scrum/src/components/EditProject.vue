@@ -174,7 +174,7 @@ const customPosition = ref("");
 const selectedUser = ref(null);
 const showDropdown = ref(false);
 const route = useRoute();
-const projectId = route.query.projectId;
+const projectId = route.params.id;
 const project = ref(null);
 
 const emit = defineEmits(["close", "submit"]);
@@ -185,7 +185,7 @@ const memberInputs = ref([
 console.log(projectId);
 
 onMounted(async () => {
-  const projectId = route.query.projectId;
+  const projectId = route.params.id;
   console.log("projectId:", projectId);
 
   if (!projectId) return console.warn("No projectId found in query");

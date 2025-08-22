@@ -269,6 +269,8 @@
               <input
                 type="date"
                 v-model="formData.created_at"
+                :min="canSubmitYesterday ? minDate : maxDate"
+                :max="maxDate"
                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -454,11 +456,12 @@ import EditProject from "../../components/EditProject.vue";
 
 const user = JSON.parse(localStorage.getItem("user")) || {};
 const userId = user.id;
-
+const canSubmitYesterday = ref(true);
+const formatDateForInput = (d) => d.toISOString().split("T")[0];
 const route = useRoute();
 const router = useRouter();
 const projectId = route.params.id;
-const position = ref(null)
+const position = ref(null);
 const project = ref(null);
 const token = ref(null);
 const showPopup = ref(false);
@@ -474,12 +477,16 @@ const notSubmittedUsers = ref([]);
 const fileInputs = ref([]);
 const hoveredIndex = ref(null);
 const activeDropdownIndex = ref(null);
+
 // const socket = io('http://localhost:3000');
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-// const addProject = (newProject) => {
-//   console.log("New project added:", newProject);
-// };
+const today = new Date();
+const yesterday = new Date();
+yesterday.setDate(today.getDate() - 1);
+
+const maxDate = formatDateForInput(today);
+const minDate = formatDateForInput(yesterday);
 
 const formData = ref({
   type: "daily",
@@ -495,6 +502,27 @@ const formData = ref({
   created_at: "",
   files: [],
 });
+
+formData.value.created_at = formatDateForInput(today);
+
+const getCurrentUserId = async () => {
+  const fromLocal = Number(localStorage.getItem("user_id"));
+  if (fromLocal) return fromLocal;
+
+  if (!token.value) return null;
+  try {
+    const res = await axios.get(`${backendUrl}/api/users/profile`, {
+      headers: { Authorization: `Bearer ${token.value}` },
+      withCredentials: true,
+    });
+    const id = res.data?.user?.id ?? res.data?.id;
+    if (id) localStorage.setItem("user_id", id);
+    return id ?? null;
+  } catch (e) {
+    console.error("fetch profile failed:", e);
+    return null;
+  }
+};
 
 function handleMouseEnter(index) {
   hoveredIndex.value = index;
@@ -513,18 +541,17 @@ function editMember(member) {
   console.log("Edit:", member);
 }
 
-
 async function deleteMember(member) {
   token.value = localStorage.getItem("token");
 
   const result = await Swal.fire({
     title: `ต้องการลบ Scrum ของ ${member.firstname} ${member.lastname} หรือไม่?`,
-    icon: 'warning',
+    icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#aaa',
-    confirmButtonText: 'ลบ',
-    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#aaa",
+    confirmButtonText: "ลบ",
+    cancelButtonText: "ยกเลิก",
   });
 
   if (!result.isConfirmed) return;
@@ -540,21 +567,20 @@ async function deleteMember(member) {
     });
 
     await Swal.fire({
-      icon: 'success',
-      title: 'ลบสำเร็จ',
+      icon: "success",
+      title: "ลบสำเร็จ",
       text: `${member.firstname} ${member.lastname} ถูกลบเรียบร้อยแล้ว`,
       timer: 1500,
       showConfirmButton: false,
     });
 
-    location.reload(); 
-
+    location.reload();
   } catch (error) {
-    console.error('Error deleting scrum:', error);
+    console.error("Error deleting scrum:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'เกิดข้อผิดพลาด',
-      text: 'ไม่สามารถลบรายการได้ กรุณาลองใหม่',
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถลบรายการได้ กรุณาลองใหม่",
     });
   }
 }
@@ -564,10 +590,9 @@ const openEditModal = (id) => {
   showModal.value = true;
 };
 
-
 const handleUpdatedProject = (updatedProject) => {
   console.log("Project updated:", updatedProject);
-  fetchProjects();
+  fetchProject();
 };
 
 const fetchProject = async () => {
@@ -581,7 +606,7 @@ const fetchProject = async () => {
 
     const member = allMembers.value.find((m) => m.id === userId);
     if (member) {
-      position.value = member.position; 
+      position.value = member.position;
     } else {
       position.value = "Member";
     }
@@ -662,6 +687,8 @@ onMounted(() => {
 
 const fetchScrumData = async () => {
   token.value = localStorage.getItem("token");
+  const projectId = route.params.id;
+
   try {
     const res = await axios.get(
       `${backendUrl}/api/daily-scrum/project/${projectId}`,
@@ -675,17 +702,15 @@ const fetchScrumData = async () => {
     );
 
     const scrums = res.data.scrums;
-
-    // ✅ หาวันนี้ (ตัดเวลาออก เปรียบเทียบเฉพาะ yyyy-mm-dd)
     const todayStr = new Date().toISOString().split("T")[0];
 
-    // ✅ กรองเฉพาะ created_at ของวันนี้
-    const todayScrums = scrums.filter(scrum => {
-      const createdDate = new Date(scrum.created_at).toISOString().split("T")[0];
+    const todayScrums = scrums.filter((scrum) => {
+      const createdDate = new Date(scrum.created_at)
+        .toISOString()
+        .split("T")[0];
       return createdDate === todayStr;
     });
 
-    // ✅ map เฉพาะที่เหลือหลังกรอง
     scrumMemberss.value = todayScrums.map((scrum) => ({
       id: scrum.id,
       type: scrum.type,
@@ -710,9 +735,21 @@ const fetchScrumData = async () => {
   }
 };
 
-onMounted(() => {
-  if (projectId) {
-    fetchScrumData();
+onMounted(async () => {
+  await fetchScrumData();
+
+  // ตรวจสอบว่าเปิดจาก notification แบบ new_comment
+  if (route.query.popup === "comment") {
+    const dailyScrumId = localStorage.getItem("daily_scrum_id");
+    if (dailyScrumId) {
+      // หา member ที่ตรงกับ dailyScrumId
+      const member = scrumMemberss.value.find(
+        (m) => m.id === Number(dailyScrumId)
+      );
+      if (member) {
+        openPopup(member);
+      }
+    }
   }
 });
 
@@ -736,55 +773,66 @@ onMounted(async () => {
   token.value = localStorage.getItem("token");
 
   try {
-    // 1. ดึงสมาชิกทั้งหมดจากโปรเจกต์
-    const projectRes = await axios.get(
-      `${backendUrl}/api/projects/${projectId}`,
-      {
+    const currentUserId = await getCurrentUserId();
+
+    // ดึงสมาชิกและ scrum ของโปรเจกต์
+    const [projectRes, scrumRes] = await Promise.all([
+      axios.get(`${backendUrl}/api/projects/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token.value}`,
           "ngrok-skip-browser-warning": "true",
         },
         withCredentials: true,
-      }
-    );
-    allMembers.value = projectRes.data.project.members || [];
-
-    // 2. ดึงรายการ scrum ทั้งหมดของโปรเจกต์
-    const scrumRes = await axios.get(
-      `${backendUrl}/api/daily-scrum/project/${projectId}`,
-      {
+      }),
+      axios.get(`${backendUrl}/api/daily-scrum/project/${projectId}`, {
         headers: {
           Authorization: `Bearer ${token.value}`,
           "ngrok-skip-browser-warning": "true",
         },
         withCredentials: true,
-      }
-    );
+      }),
+    ]);
 
-    // 3. หาวันปัจจุบัน (yyyy-mm-dd)
-    const today = new Date().toISOString().split("T")[0];
+    allMembers.value = projectRes.data?.project?.members || [];
+    const scrums = scrumRes.data?.scrums || [];
 
-    // 4. filter scrum เฉพาะที่สร้างวันนี้
-    const todayScrums = scrumRes.data.scrums.filter((scrum) => {
-      const scrumDate = new Date(scrum.created_at).toISOString().split("T")[0];
-      return scrumDate === today;
+    // วันที่วันนี้และเมื่อวาน
+    const todayStr = formatDateForInput(today);
+    const yesterdayStr = formatDateForInput(yesterday);
+
+    // ตรวจสอบว่าส่งเมื่อวานหรือยัง
+    const sentYesterdayByThisUser = scrums.some((s) => {
+      const scrumDate = formatDateForInput(new Date(s.created_at));
+      const uid = s.user_id ?? s.user?.id;
+      return (
+        scrumDate === yesterdayStr &&
+        (currentUserId ? uid === currentUserId : true)
+      );
     });
+    canSubmitYesterday.value = !sentYesterdayByThisUser;
 
-    // 5. รวม user ที่ส่งแล้ว (เฉพาะของวันนี้)
+    // กรอง scrum วันนี้
+    const todayScrums = scrums.filter(
+      (s) => formatDateForInput(new Date(s.created_at)) === todayStr
+    );
+
+    // คนที่ส่งแล้ว
     const seenUserIds = new Set();
     submittedUsers.value = todayScrums
-      .map((scrum) => scrum.user)
-      .filter((user) => {
-        if (!seenUserIds.has(user.id)) {
-          seenUserIds.add(user.id);
+      .map((s) => s.user ?? { id: s.user_id })
+      .filter((u) => {
+        const id = u?.id;
+        if (!id) return false;
+        if (!seenUserIds.has(id)) {
+          seenUserIds.add(id);
           return true;
         }
         return false;
       });
 
-    // 6. คำนวณคนที่ยังไม่ได้ส่งวันนี้
+    // คนที่ยังไม่ส่ง
     notSubmittedUsers.value = allMembers.value.filter(
-      (member) => !seenUserIds.has(member.id)
+      (m) => !seenUserIds.has(m.id)
     );
   } catch (error) {
     console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", error);
@@ -801,12 +849,10 @@ const handleFileChange = (e) => {
 };
 
 const handleSubmit = async () => {
-  token.value = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
   try {
     const data = new FormData();
-
-    // กรองและเพิ่มเฉพาะ field ที่มีค่า ไม่เป็น undefined หรือ null
     for (const key in formData.value) {
       const value = formData.value[key];
       if (value !== undefined && value !== null && value !== "") {
@@ -814,14 +860,9 @@ const handleSubmit = async () => {
       }
     }
 
-    // เพิ่มไฟล์
-    fileInputs.value.forEach((file) => {
-      data.append("files", file);
-    });
-
     const response = await axios.post(`${backendUrl}/api/daily-scrum`, data, {
       headers: {
-        Authorization: `Bearer ${token.value}`,
+        Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "true",
       },
       withCredentials: true,
@@ -833,7 +874,6 @@ const handleSubmit = async () => {
       text: "Project marked as done!",
     });
 
-    console.log("Submitted:", response.data);
     showPopup.value = false;
     location.reload();
   } catch (error) {

@@ -197,12 +197,23 @@
               >
                 Mark Project as done
               </button>
-              <button
-                @click="showPopup = true"
-                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-              >
-                Create Daily-scrum
-              </button>
+              <div>
+                <button
+                  v-if="!hasSubmittedToday"
+                  @click="showPopup = true"
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                >
+                  Create Daily-scrum
+                </button>
+
+                <button
+                  v-else
+                  @click="showPopup = true"
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                >
+                  Update Daily-scrum
+                </button>
+              </div>
               <button
                 @click="goToHistory"
                 class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
@@ -212,12 +223,23 @@
             </template>
 
             <template v-else>
-              <button
-                @click="showPopup = true"
-                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-              >
-                Create Daily-scrum
-              </button>
+              <div>
+                <button
+                  v-if="!hasSubmittedToday"
+                  @click="showPopup = true"
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                >
+                  Create Daily-scrum
+                </button>
+
+                <button
+                  v-else
+                  @click="showPopup = true"
+                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                >
+                  Update Daily-scrum
+                </button>
+              </div>
               <button
                 @click="goToHistory"
                 class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
@@ -240,11 +262,11 @@
     <!-- Popup แยกออกมาเป็น component -->
     <ScrumForm
       v-if="showPopup"
-    :visible="showPopup"
-    :projectId="Number(projectId)"
-    :canSubmitYesterday="canSubmitYesterday"
-    @close="showPopup = false"
-    @submitted="handleSubmitted"
+      :visible="showPopup"
+      :projectId="Number(projectId)"
+      :canSubmitYesterday="canSubmitYesterday"
+      @close="showPopup = false"
+      @submitted="handleSubmitted"
     />
   </div>
 </template>
@@ -273,7 +295,7 @@ const scrumMemberss = ref([]);
 const allMembers = ref([]);
 const submittedUsers = ref([]);
 const notSubmittedUsers = ref([]);
-
+const hasSubmittedToday = ref(false);
 const hoveredIndex = ref(null);
 const activeDropdownIndex = ref(null);
 
@@ -368,6 +390,10 @@ const fetchScrumData = async () => {
         created_at: scrum.created_at,
       }));
 
+    hasSubmittedToday.value = scrumMemberss.value.some(
+      (scrum) => scrum.user_id === userId
+    );
+
     // Submitted / Not submitted
     const todayScrums = scrums.filter((scrum) => {
       const scrumDate = new Date(scrum.created_at).toISOString().split("T")[0];
@@ -390,6 +416,24 @@ const fetchScrumData = async () => {
     console.error("Error fetching scrum data:", err);
   }
 };
+
+onMounted(async () => {
+  await fetchScrumData();
+
+  // ตรวจสอบว่าเปิดจาก notification แบบ new_comment
+  if (route.query.popup === "comment") {
+    const dailyScrumId = localStorage.getItem("daily_scrum_id");
+    if (dailyScrumId) {
+      // หา member ที่ตรงกับ dailyScrumId
+      const member = scrumMemberss.value.find(
+        (m) => m.id === Number(dailyScrumId)
+      );
+      if (member) {
+        openPopup(member);
+      }
+    }
+  }
+});
 
 async function deleteMember(member) {
   const result = await Swal.fire({

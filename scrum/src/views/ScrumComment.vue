@@ -221,7 +221,6 @@ import { useUserStore } from "../stores/userStore.js";
 import Swal from "sweetalert2";
 
 const route = useRoute();
-const dailyScrumId = route.params.id;
 const comments = ref([]);
 const newComment = ref("");
 const token = ref(null);
@@ -236,7 +235,7 @@ const props = defineProps({
 
 // console.log("userID",userStore.user)
 // console.log(dailyScrumId);
-// console.log(props.data);
+console.log(props.data);
 
 const emit = defineEmits(["close"]);
 

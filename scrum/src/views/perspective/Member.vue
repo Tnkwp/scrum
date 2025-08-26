@@ -208,7 +208,7 @@
 
                 <button
                   v-else
-                  @click="showPopup = true"
+                  @click="openEditPopup(getTodayScrumId())"
                   class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
                 >
                   Update Daily-scrum
@@ -234,7 +234,7 @@
 
                 <button
                   v-else
-                  @click="showPopup = true"
+                  @click="openEditPopup(getTodayScrumId())"
                   class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
                 >
                   Update Daily-scrum
@@ -268,6 +268,16 @@
       @close="showPopup = false"
       @submitted="handleSubmitted"
     />
+
+    <EditScrum
+      v-if="showwPopup"
+      :visible="showwPopup"
+      :scrumId="selectedScrumId"
+      :projectId="Number(projectId)"
+      :canSubmitYesterday="canSubmitYesterday"
+      @close="showwPopup = false"
+      @submitted="fetchScrums()"
+    />
   </div>
 </template>
 
@@ -280,6 +290,7 @@ import Swal from "sweetalert2";
 import ScrumComment from "../ScrumComment.vue";
 import EditProject from "../../components/EditProject.vue";
 import ScrumForm from "../../components/ScrumForm.vue";
+import EditScrum from "../../components/EditScrum.vue";
 
 const user = JSON.parse(localStorage.getItem("user")) || {};
 const userId = user.id;
@@ -298,9 +309,12 @@ const notSubmittedUsers = ref([]);
 const hasSubmittedToday = ref(false);
 const hoveredIndex = ref(null);
 const activeDropdownIndex = ref(null);
+const canSubmitYesterday = true;
+const selectedScrumId = ref(null);
 
 const showPopup = ref(false);
 const showPopupp = ref(false);
+const showwPopup = ref(false);
 const selectedMember = ref(null);
 
 const showModal = ref(false);
@@ -334,6 +348,8 @@ const openEditModal = (id) => {
   currentProjectId.value = id;
   showModal.value = true;
 };
+
+
 
 const fetchProject = async () => {
   try {
@@ -434,6 +450,17 @@ onMounted(async () => {
     }
   }
 });
+
+const getTodayScrumId = () => {
+  const todayScrum = scrumMemberss.value.find((s) => s.user_id === userId);
+  return todayScrum ? todayScrum.id : null;
+};
+
+const openEditPopup = (id) => {
+  if (!id) return;
+  selectedScrumId.value = id;
+  showwPopup.value = true;
+};
 
 async function deleteMember(member) {
   const result = await Swal.fire({

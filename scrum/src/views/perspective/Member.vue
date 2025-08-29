@@ -18,7 +18,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <!-- Scrum Members -->
-        <div class="lg:col-span-2 space-y-4">
+        <div class="lg:col-span-2 space-y-4" v-if="project?.status !== 'done'">
           <div
             v-for="(member, index) in scrumMemberss"
             :key="index"
@@ -137,116 +137,126 @@
         />
 
         <!-- Summary -->
-        <div>
-          <div class="bg-white rounded-lg p-4 shadow">
-            <h2 class="text-xl font-semibold mb-4 text-center">
-              Scrum's Summary
-            </h2>
-            <div class="flex justify-between px-5">
-              <div>
-                <div class="mb-2">
-                  <p class="font-bold">คนที่ส่งแล้ว</p>
+        <div
+          :class="[
+            project?.status === 'done'
+              ? 'flex justify-center'
+              : 'flex justify-center',
+          ]"
+        >
+          <div>
+            <div
+              class="bg-white rounded-lg p-4 shadow max-w-2xl w-full mx-auto"
+            >
+              <h2 class="text-xl font-semibold mb-4 text-center">
+                Scrum's Summary
+              </h2>
+              <div class="flex justify-between px-5">
+                <div>
+                  <div class="mb-2">
+                    <p class="font-bold">คนที่ส่งแล้ว</p>
+                    <ul class="ml-4 text-sm space-y-1">
+                      <li v-for="user in submittedUsers" :key="user.id">
+                        - {{ user.firstname }} {{ user.lastname }} ({{
+                          user.position
+                        }}) {{ user.scrum_point }} คะแนน
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p class="font-bold mt-4">คนที่ยังไม่ได้ส่ง</p>
                   <ul class="ml-4 text-sm space-y-1">
-                    <li v-for="user in submittedUsers" :key="user.id">
-                      - {{ user.firstname }} {{ user.lastname }} ({{
-                        user.position
-                      }}) {{ user.scrum_point }} คะแนน
+                    <li v-for="member in notSubmittedUsers" :key="member.id">
+                      - {{ member.firstname }} {{ member.lastname }} ({{
+                        member.position
+                      }}) {{ member.scrum_point }} คะแนน
                     </li>
                   </ul>
                 </div>
 
-                <p class="font-bold mt-4">คนที่ยังไม่ได้ส่ง</p>
-                <ul class="ml-4 text-sm space-y-1">
-                  <li v-for="member in notSubmittedUsers" :key="member.id">
-                    - {{ member.firstname }} {{ member.lastname }} ({{
-                      member.position
-                    }}) {{ member.scrum_point }} คะแนน
-                  </li>
-                </ul>
-              </div>
-
-              <div v-if="project" class="mt-4 text-sm">
-                <p>
-                  <strong>Deadline Date:</strong>
-                  {{ formatDate(project.deadline_date) }}
-                </p>
+                <div v-if="project" class="mt-4 text-sm">
+                  <p>
+                    <strong>Deadline Date:</strong>
+                    {{ formatDate(project.deadline_date) }}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Buttons -->
-          <div class="space-y-4 mt-6">
-            <template v-if="position === 'Project Manager'">
-              <div class="flex gap-3">
+            <!-- Buttons -->
+            <div class="space-y-4 mt-6">
+              <template v-if="position === 'Project Manager'">
+                <div class="flex gap-3">
+                  <button
+                    @click="openEditModal(projectId)"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  >
+                    Edit Project
+                  </button>
+                  <button
+                    class="bg-[#DD5B5B] rounded-[5px] text-white px-5"
+                    @click="handleDelete"
+                  >
+                    Delete Project
+                  </button>
+                </div>
                 <button
-                  @click="openEditModal(projectId)"
+                  @click="markProjectAsDone"
                   class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
                 >
-                  Edit Project
+                  Mark Project as done
                 </button>
+                <div>
+                  <button
+                    v-if="!hasSubmittedToday"
+                    @click="showPopup = true"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  >
+                    Create Daily-scrum
+                  </button>
+
+                  <button
+                    v-else
+                    @click="openEditPopup(getTodayScrumId())"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                  >
+                    Update Daily-scrum
+                  </button>
+                </div>
                 <button
-                  class="bg-[#DD5B5B] rounded-[5px] text-white px-5"
-                  @click="handleDelete"
-                >
-                  Delete Project
-                </button>
-              </div>
-              <button
-                @click="markProjectAsDone"
-                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-              >
-                Mark Project as done
-              </button>
-              <div>
-                <button
-                  v-if="!hasSubmittedToday"
-                  @click="showPopup = true"
+                  @click="goToHistory"
                   class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
                 >
-                  Create Daily-scrum
+                  Scrum History
                 </button>
+              </template>
 
-                <button
-                  v-else
-                  @click="openEditPopup(getTodayScrumId())"
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
-                >
-                  Update Daily-scrum
-                </button>
-              </div>
-              <button
-                @click="goToHistory"
-                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-              >
-                History
-              </button>
-            </template>
+              <template v-else>
+                <div>
+                  <button
+                    v-if="!hasSubmittedToday"
+                    @click="showPopup = true"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  >
+                    Create Daily-scrum
+                  </button>
 
-            <template v-else>
-              <div>
+                  <button
+                    v-else
+                    @click="openEditPopup(getTodayScrumId())"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                  >
+                    Update Daily-scrum
+                  </button>
+                </div>
                 <button
-                  v-if="!hasSubmittedToday"
-                  @click="showPopup = true"
+                  @click="goToHistory"
                   class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
                 >
-                  Create Daily-scrum
+                  Scrum History
                 </button>
-
-                <button
-                  v-else
-                  @click="openEditPopup(getTodayScrumId())"
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
-                >
-                  Update Daily-scrum
-                </button>
-              </div>
-              <button
-                @click="goToHistory"
-                class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-              >
-                History
-              </button>
-            </template>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -348,8 +358,6 @@ const openEditModal = (id) => {
   currentProjectId.value = id;
   showModal.value = true;
 };
-
-
 
 const fetchProject = async () => {
   try {

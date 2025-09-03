@@ -1,52 +1,55 @@
 <template>
-  <div class="bg-[#F0FDF4] min-h-screen">
+  <div class="bg-[#F0FDF4] min-h-screen font-noto">
+    <!-- Header -->
     <div class="relative flex items-center text-black h-[80px] pt-16">
       <router-link
         to="/homepage"
-        class="absolute left-0 top-1/2 -translate-y-1/2 pt-16"
+        class="absolute left-4 top-1/2 -translate-y-1/2 pt-16 hover:scale-110 transition"
       >
-        <img src="/left-arrow.png" alt="" />
+        <img src="/left-arrow.png" alt="Back" class="w-6 h-6" />
       </router-link>
 
       <span
-        class="absolute left-1/2 -translate-x-1/2 text-[16px] md:text-[22px] font-noto"
+        class="absolute left-1/2 -translate-x-1/2 text-lg md:text-xl font-semibold"
       >
         การแจ้งเตือน
       </span>
     </div>
 
+    <!-- Notifications List -->
     <div
-      class="mt-10 px-4 sm:px-10 lg:px-32 xl:px-60 pt-5 mx-auto max-w-5xl bg-[#F3F4F6] rounded-t-[26px] shadow-lg"
+      class="mt-10 px-4 sm:px-10 lg:px-32 xl:px-60 pt-6 mx-auto max-w-5xl bg-white rounded-2xl shadow-lg divide-y divide-gray-100"
     >
-      <li
+      <div
         v-for="item in notifications"
         :key="item.id"
-        class="flex items-start gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+        class="flex items-start justify-between gap-3 p-4 hover:bg-gray-50 cursor-pointer transition"
         @click="markAsRead(item)"
       >
+        <!-- Content -->
         <div class="flex-1">
-          <p class="text-gray-800">
-            <span v-html="item.message"></span>
-          </p>
-          <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+          <p
+            class="text-gray-800 text-sm sm:text-base leading-relaxed"
+            v-html="item.message"
+          ></p>
+          <div class="flex items-center gap-2 text-xs text-gray-500 mt-2">
             <span>{{ item.time }}</span>
             <span
               v-if="item.status === 'unread'"
-              class="w-2 h-2 bg-green-200 rounded-full inline-block"
+              class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
             ></span>
           </div>
         </div>
 
-        <!-- ปุ่มลบ -->
+        <!-- Delete Button -->
         <button
-          @click="deleteNotification(item.id)"
-          class="ml-2 p-1 rounded-full hover:bg-red-100 text-red-500 transition-colors duration-200"
+          @click.stop="deleteNotification(item.id)"
+          class="ml-2 p-2 rounded-full hover:bg-red-100 text-red-500 transition"
           title="ลบข้อความ"
         >
-          <!-- ใช้ icon แทนข้อความ -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -59,7 +62,7 @@
             />
           </svg>
         </button>
-      </li>
+      </div>
     </div>
   </div>
 </template>

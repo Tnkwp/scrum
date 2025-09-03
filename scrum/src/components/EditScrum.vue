@@ -9,7 +9,7 @@
         <div class="flex justify-between">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Daily-scrum Type ะะะ
+              Daily-scrum Type
             </label>
             <select
               v-model="formData.type"
@@ -81,6 +81,47 @@
               @change="handleFileChange"
               class="w-full border rounded px-3 py-2"
             />
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >ไฟล์ที่แนบ</label
+              >
+              <div
+                v-if="formData.files && formData.files.length"
+                class="flex flex-wrap gap-4"
+              >
+                <div
+                  v-for="file in formData.files"
+                  :key="file.id"
+                  class="relative w-32 h-32 border rounded-lg overflow-hidden group"
+                >
+                  <!-- ถ้าเป็นรูปภาพ -->
+                  <img
+                    v-if="file.mime_type && file.mime_type.startsWith('image/')"
+                    :src="file.file_url"
+                    :alt="file.file_name"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- ถ้าเป็น PDF หรือไฟล์อื่น -->
+                  <a
+                    v-else
+                    :href="file.file_url"
+                    target="_blank"
+                    class="flex items-center justify-center h-full text-blue-600 underline text-sm text-center p-2"
+                  >
+                    {{ file.file_name }}
+                  </a>
+
+                  <!-- ปุ่มลบ -->
+                  <button
+                    @click="deleteSingleFile(file)"
+                    class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  >
+                    ลบ
+                  </button>
+                </div>
+              </div>
+              <p v-else class="text-gray-500 text-sm">ไม่มีไฟล์แนบ</p>
+            </div>
           </div>
         </div>
 
@@ -135,6 +176,47 @@
               @change="handleFileChange"
               class="w-full border rounded px-3 py-2"
             />
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >ไฟล์ที่แนบ</label
+              >
+              <div
+                v-if="formData.files && formData.files.length"
+                class="flex flex-wrap gap-4"
+              >
+                <div
+                  v-for="file in formData.files"
+                  :key="file.id"
+                  class="relative w-32 h-32 border rounded-lg overflow-hidden group"
+                >
+                  <!-- ถ้าเป็นรูปภาพ -->
+                  <img
+                    v-if="file.mime_type && file.mime_type.startsWith('image/')"
+                    :src="file.file_url"
+                    :alt="file.file_name"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- ถ้าเป็น PDF หรือไฟล์อื่น -->
+                  <a
+                    v-else
+                    :href="file.file_url"
+                    target="_blank"
+                    class="flex items-center justify-center h-full text-blue-600 underline text-sm text-center p-2"
+                  >
+                    {{ file.file_name }}
+                  </a>
+
+                  <!-- ปุ่มลบ -->
+                  <button
+                    @click="deleteSingleFile(file)"
+                    class="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  >
+                    ลบ
+                  </button>
+                </div>
+              </div>
+              <p v-else class="text-gray-500 text-sm">ไม่มีไฟล์แนบ</p>
+            </div>
           </div>
         </div>
 
@@ -195,8 +277,6 @@ const formData = ref({
   files: [],
 });
 
-const oldFiles = ref([]); // สำหรับเก็บไฟล์เดิม
-
 const handleFileChange = (e) => {
   formData.value.files = Array.from(e.target.files);
 };
@@ -220,16 +300,13 @@ watch(
 const fetchScrumDetail = async (id) => {
   token.value = localStorage.getItem("token");
   try {
-    const res = await axios.get(
-      `${backendUrl}/api/daily-scrum/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }
-    );
+    const res = await axios.get(`${backendUrl}/api/daily-scrum/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
+    });
 
     const data = res.data.scrum;
     console.log("API Response:", res.data);
@@ -245,19 +322,38 @@ const fetchScrumDetail = async (id) => {
     formData.value.created_at = data.created_at
       ? new Date(data.created_at).toISOString().split("T")[0]
       : formatDateForInput(today);
-    formData.value.files = [];
-
-    // แปลงไฟล์เดิมมาเก็บใน oldFiles
-    oldFiles.value = (data.files || []).map((f) => ({
-      id: f.id,
-      url: f.url || f.path,
-      name: f.name || f.filename || `ไฟล์ ${f.id}`,
-    }));
+    formData.value.files = data.files || [];
   } catch (error) {
     console.error("Error loading scrum detail:", error);
     Swal.fire({ icon: "error", title: "โหลดข้อมูลไม่สำเร็จ" });
   }
 };
+
+const deleteSingleFile = async (file) => {
+  try {
+    if (!props.scrumId) {
+      Swal.fire({ icon: "warning", title: "ไม่พบ scrumId" });
+      return;
+    }
+
+    await axios.delete(`${backendUrl}/api/daily-scrum/${props.scrumId}/file`, {
+      data: { fileName: file.file_name }, // ส่งชื่อไฟล์ตามที่ backend ต้องการ
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+
+    // อัพเดต state หลังลบ
+    formData.value.files = formData.value.files.filter((f) => f.id !== file.id);
+
+    Swal.fire({ icon: "success", title: "ลบไฟล์สำเร็จ" });
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    Swal.fire({ icon: "error", title: "ลบไฟล์ไม่สำเร็จ" });
+  }
+};
+
 
 const handleSubmit = async () => {
   token.value = localStorage.getItem("token");
@@ -279,7 +375,7 @@ const handleSubmit = async () => {
       });
     }
 
-    await axios.patch(`${backendUrl}/api/daily-scrum/${props.scrumId}`, data, {
+    await axios.put(`${backendUrl}/api/daily-scrum/${props.scrumId}`, data, {
       headers: {
         Authorization: `Bearer ${token.value}`,
         "ngrok-skip-browser-warning": "true",

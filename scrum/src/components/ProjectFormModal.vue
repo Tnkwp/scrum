@@ -212,6 +212,15 @@ function addMember() {
   });
 }
 
+const formatTimeForMySQL = (dateObj) => {
+  if (!dateObj) return null;
+  const d = new Date(dateObj);
+  const hours = d.getHours().toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+  const seconds = d.getSeconds().toString().padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
+};
+
 const submitForm = async () => {
   token.value = localStorage.getItem("token");
   if (!token.value) {
@@ -227,8 +236,10 @@ const submitForm = async () => {
         input.position === "Other..." ? input.customPosition : input.position,
     }));
 
+  // ✅ แปลง scrum_time ก่อนส่ง
   const payload = {
     ...form.value,
+    scrum_time: formatTimeForMySQL(form.value.scrum_time),
     members: membersData,
   };
 

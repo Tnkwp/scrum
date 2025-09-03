@@ -126,7 +126,7 @@
       </div>
       <hr class="my-2" />
       <div>
-        <span class="text-[14px]"> Commment </span>
+        <span class="text-[14px]"> Comment </span>
       </div>
       <div class="space-y-3 max-h-64 overflow-y-auto pr-2">
         <div
@@ -214,7 +214,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { defineProps, defineEmits } from "vue";
+// import { defineProps, defineEmits } from "vue";
 import axios from "axios";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../stores/userStore.js";

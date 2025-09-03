@@ -8,19 +8,35 @@
         <div class="grid grid-cols-3 gap-4">
           <div class="flex flex-col gap-2">
             <label class="text-sm">Project Title</label>
-            <input
+            <el-mention
+              v-model="form.title"
+              style="height: 30px"
+              placeholder="Project Title"
+            >
+            </el-mention>
+            <!-- <input
               v-model="form.title"
               type="text"
               placeholder="Project Title"
               class="input"
-            />
+            /> -->
           </div>
           <div class="flex flex-col gap-2">
             <label class="text-sm">Deadline Date</label>
-            <input v-model="form.deadline_date" type="date" class="input" />
+            <el-date-picker
+              v-model="form.deadline_date"
+              type="date"
+              placeholder=""
+            />
+            <!-- <input v-model="form.deadline_date" type="date" class="input" /> -->
           </div>
           <div class="flex flex-col gap-2">
             <label class="text-sm">Daily Scrum Time</label>
+            <!-- <el-time-picker
+              v-model="form.scrum_time"
+              arrow-control
+              placeholder="time"
+            /> -->
             <input v-model="form.scrum_time" type="time" class="input" />
           </div>
         </div>
@@ -28,10 +44,16 @@
         <!-- Description -->
         <div class="flex flex-col gap-2">
           <label class="text-sm">Description</label>
-          <textarea
+          <el-mention
+            v-model="form.description"
+            type="textarea"
+            style=""
+            placeholder=""
+          />
+          <!-- <textarea
             v-model="form.description"
             class="w-full h-24 resize-none border border-gray-300 rounded"
-          />
+          /> -->
         </div>
 
         <div class="">
@@ -323,5 +345,9 @@ async function updateProject() {
 <style scoped>
 .input {
   @apply w-full h-[35px] border border-gray-300 rounded px-3 py-2 text-[14px];
+}
+
+::v-deep(.el-date-editor.el-input) {
+  @apply w-full h-[30px] text-[14px];
 }
 </style>

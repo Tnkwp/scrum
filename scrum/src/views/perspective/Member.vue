@@ -6,7 +6,7 @@
           <h1 class="text-lg font-medium">
             <div class="flex gap-2">
               <router-link to="/homepage">
-                <img src="/left-arrow.png" alt="" />
+                <img src="/left-arrow.png" alt="" class="w-6 h-6"/>
               </router-link>
               <span>Project's Title:</span>
               <span class="font-semibold">{{ project.title }}</span>
@@ -286,7 +286,7 @@
       :projectId="Number(projectId)"
       :canSubmitYesterday="canSubmitYesterday"
       @close="showwPopup = false"
-      @submitted="fetchScrums()"
+      @submitted="handleUpdatedScrum"
     />
   </div>
 </template>

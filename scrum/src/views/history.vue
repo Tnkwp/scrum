@@ -1,105 +1,97 @@
 <template>
-  <div class="min-h-screen bg-[#E8FFF1] font-noto pt-6">
-    <div class="flex justify-between items-center px-4 py-6">
-      <!-- ซ้ายสุด: ปุ่ม back -->
-      <button @click="goBack">
+  <div class="min-h-screen bg-gradient-to-br from-[#E8FFF1] to-[#CFF5E7] font-noto pt-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center px-6 py-4  sticky top-0 z-10 bg-[#E8FFF1]">
+      <!-- Back -->
+      <button @click="goBack" class="hover:scale-110 transition">
         <img src="/left-arrow.png" alt="Back" class="w-6 h-6" />
       </button>
 
-      <!-- กลาง: ช่วงวันที่ -->
-      <div class="flex gap-4">
+      <!-- Date filter -->
+      <div class="flex gap-6 items-end">
         <div>
-          <label class="block text-sm">From :</label>
+          <label class="block text-xs text-gray-600 mb-1">From</label>
           <input
             type="date"
             v-model="fromDate"
-            class="border px-2 py-1 rounded w-32 text-center"
+            class="border border-gray-300 rounded-lg px-3 py-1.5 w-36 text-sm shadow-sm focus:ring-2 focus:ring-green-400"
           />
         </div>
         <div>
-          <label class="block text-sm">To :</label>
+          <label class="block text-xs text-gray-600 mb-1">To</label>
           <input
             type="date"
             v-model="toDate"
-            class="border px-2 py-1 rounded w-32 text-center"
+            class="border border-gray-300 rounded-lg px-3 py-1.5 w-36 text-sm shadow-sm focus:ring-2 focus:ring-green-400"
           />
         </div>
       </div>
 
-      <!-- ขวาสุด (ว่างไว้ถ้าไม่ต้องการอะไรที่ขวา) -->
+      <!-- Empty Right -->
       <div class="w-6 h-6"></div>
     </div>
 
     <!-- Card Grid -->
     <div class="flex justify-center">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 px-4 pb-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 w-full max-w-6xl">
         <div
           v-for="(card, index) in scrumMembers"
           :key="index"
-          class="bg-white rounded-lg shadow-md p-4 flex flex-col gap-2"
+          class="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-3 hover:shadow-xl transition"
         >
-          <div class="flex gap-3 items-start">
+          <!-- Profile -->
+          <div class="flex gap-4 items-start">
             <img
               :src="card.profile_pic || '/user.png'"
               alt="Avatar"
-              class="w-10 h-10 rounded-full"
+              class="w-12 h-12 rounded-full object-cover shadow"
             />
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-medium"
-                  >{{ card.firstname }} {{ card.lastname }}</span
-                >
+            <div class="flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-semibold text-gray-800 text-base">
+                  {{ card.firstname }} {{ card.lastname }}
+                </span>
                 <span
-                  class="bg-gray-100 text-sm px-2 py-1 rounded shadow text-gray-700"
+                  class=" border border-green-200 text-xs px-2 py-0.5 rounded-full  font-medium"
                 >
                   {{ card.position }}
                 </span>
               </div>
 
-              <!-- Type-based content -->
-              <div class="mt-2 text-sm whitespace-pre-line">
+              <!-- Content -->
+              <div class="mt-3 text-sm leading-relaxed text-gray-700 space-y-2">
                 <template v-if="card.type === 'daily'">
-                  <strong>สิ่งที่ทำวันนี้</strong><br />
-                  {{ card.today || "-" }}<br />
-                  <strong>ปัญหาวันนี้</strong>
-                  <template v-if="card.problem_level">
-                    <span
-                      class="inline-block w-3 h-3 rounded-full ml-2"
-                      :class="{
-                        'bg-green-500': card.problem_level === 'minor',
-                        'bg-yellow-500': card.problem_level === 'moderate',
-                        'bg-red-500': card.problem_level === 'critical',
-                      }"
-                    ></span>
-                  </template>
-                  <template v-else>
-                    <span class="text-sm text-gray-500">-</span> </template
-                  ><br />
-                  {{ card.problem || "-" }}<br />
-                  <strong>พรุ่งนี้ทำอะไร</strong><br />
-                  {{ card.tomorrow || "-" }}
+                  <p><strong class="text-gray-900">สิ่งที่ทำวันนี้:</strong><br />{{ card.today || "-" }}</p>
+                  <p>
+                    <strong class="text-gray-900">ปัญหาวันนี้:</strong>
+                    <template v-if="card.problem_level">
+                      <span
+                        class="inline-block w-3 h-3 rounded-full ml-2"
+                        :class="{
+                          'bg-green-500': card.problem_level === 'minor',
+                          'bg-yellow-500': card.problem_level === 'moderate',
+                          'bg-red-500': card.problem_level === 'critical',
+                        }"
+                      ></span>
+                    </template>
+                    <br />{{ card.problem || "-" }}
+                  </p>
+                  <p><strong class="text-gray-900">พรุ่งนี้ทำอะไร:</strong><br />{{ card.tomorrow || "-" }}</p>
                 </template>
 
-                <template
-                  v-else-if="
-                    card.type === 'friday' || card.type === 'retrospective'
-                  "
-                >
-                  <strong>สิ่งที่ทำวันนี้</strong><br />
-                  {{ card.today || "-" }}<br />
-                  <strong>Good</strong><br />
-                  {{ card.good || "-" }}<br />
-                  <strong>Bad</strong><br />
-                  {{ card.bad || "-" }}<br />
-                  <strong>Try</strong><br />
-                  {{ card.try || "-" }}<br />
-                  <strong>Next Sprint</strong><br />
-                  {{ card.next_sprint || "-" }}
+                <template v-else-if="card.type === 'friday' || card.type === 'retrospective'">
+                  <p><strong class="">สิ่งที่ทำวันนี้:</strong><br />{{ card.today || "-" }}</p>
+                  <p><strong class="">Good:</strong><br />{{ card.good || "-" }}</p>
+                  <p><strong class="">Bad:</strong><br />{{ card.bad || "-" }}</p>
+                  <p><strong class="">Try:</strong><br />{{ card.try || "-" }}</p>
+                  <p><strong class="">Next Sprint:</strong><br />{{ card.next_sprint || "-" }}</p>
                 </template>
               </div>
             </div>
           </div>
-          <div class="text-right text-sm text-gray-500 mt-2">
+
+          <!-- Footer -->
+          <div class="text-right text-xs text-gray-500 mt-2 border-t pt-2">
             {{ formatDate(card.created_at) }}
           </div>
         </div>

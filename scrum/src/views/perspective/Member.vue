@@ -114,7 +114,7 @@
             <!-- Retrospective -->
             <template
               v-else-if="
-                member.type === 'friday' || member.type === 'retrospective'
+                member.type === 'weekly' || member.type === 'retrospective'
               "
             >
               <p><strong>Good</strong><br />{{ member.good || "-" }}</p>
@@ -140,13 +140,13 @@
         <div
           :class="[
             project?.status === 'done'
-              ? 'flex justify-center'
-              : 'flex justify-center',
+              ? 'lg:col-span-3 flex justify-center'
+              : '',
           ]"
         >
           <div>
             <div
-              class="bg-white rounded-lg p-4 shadow max-w-2xl w-full mx-auto"
+              class="bg-white rounded-lg p-4 shadow "
             >
               <h2 class="text-xl font-semibold mb-4 text-center">
                 Scrum's Summary

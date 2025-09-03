@@ -22,7 +22,7 @@
         </div>
         <div
           v-else-if="
-            props.data.type === 'friday' || props.data.type === 'retrospective'
+            props.data.type === 'weekly' || props.data.type === 'retrospective'
           "
         >
           <p>

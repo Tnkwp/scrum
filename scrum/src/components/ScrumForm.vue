@@ -11,14 +11,15 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Daily-scrum Type
             </label>
-            <select
+            <el-select
               v-model="formData.type"
-              class="w-full border border-gray-300 rounded px-5 py-2"
+              placeholder="Select type"
+              class="w-full"
             >
-              <option value="daily">Daily scrum</option>
-              <option value="friday">Friday Scrum</option>
-              <option value="retrospective">Retrospective</option>
-            </select>
+              <el-option label="Daily Scrum" value="daily" />
+              <el-option label="Weekly Scrum" value="weekly" />
+              <el-option label="Retrospective" value="retrospective" />
+            </el-select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1"

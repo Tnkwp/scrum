@@ -16,7 +16,7 @@
               class="w-full border border-gray-300 rounded px-5 py-2"
             >
               <option value="daily">Daily scrum</option>
-              <option value="friday">Friday Scrum</option>
+              <option value="weekly">Weekly Scrum</option>
               <option value="retrospective">Retrospective</option>
             </select>
           </div>

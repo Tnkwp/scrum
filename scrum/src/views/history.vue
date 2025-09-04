@@ -148,7 +148,7 @@ const fetchScrumData = async () => {
   token.value = localStorage.getItem("token");
   try {
     const res = await axios.get(
-      `${backendUrl}/api/daily-scrum/project/${projectId}`,
+      `${backendUrl}/api/posts/project/${projectId}`,
       {
         headers: {
           Authorization: `Bearer ${token.value}`,
@@ -158,21 +158,21 @@ const fetchScrumData = async () => {
       }
     );
 
-    const mapped = res.data.scrums.map((scrum) => ({
-      type: scrum.type,
-      today: scrum.today_task,
-      problem: scrum.problem,
-      problem_level: scrum.problem_level,
-      tomorrow: scrum.tomorrow_task,
-      good: scrum.good,
-      bad: scrum.bad,
-      try: scrum.try,
-      next_sprint: scrum.next_sprint,
-      firstname: scrum.user.firstname,
-      lastname: scrum.user.lastname,
-      profile_pic: scrum.user.profile_pic,
-      position: scrum.user.position,
-      created_at: scrum.created_at,
+    const mapped = res.data.posts.map((post) => ({
+      type: post.type,
+      today: post.today_task,
+      problem: post.problem,
+      problem_level: post.problem_level,
+      tomorrow: post.tomorrow_task,
+      good: post.good,
+      bad: post.bad,
+      try: post.try,
+      next_sprint: post.next_sprint,
+      firstname: post.user.firstname,
+      lastname: post.user.lastname,
+      profile_pic: post.user.profile_pic,
+      position: post.user.position,
+      created_at: post.created_at,
     }));
 
     const sorted = mapped.sort(
@@ -199,8 +199,8 @@ const applyDateFilter = () => {
   const from = fromDate.value ? new Date(fromDate.value) : null;
   const to = toDate.value ? new Date(toDate.value) : null;
 
-  scrumMembers.value = allScrumMembers.value.filter((scrum) => {
-    const createdDate = new Date(scrum.created_at);
+  scrumMembers.value = allScrumMembers.value.filter((post) => {
+    const createdDate = new Date(post.created_at);
     return (!from || createdDate >= from) && (!to || createdDate <= to);
   });
 };

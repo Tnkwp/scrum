@@ -175,7 +175,7 @@ const markAsRead = async (item) => {
 
     case "new_comment":
       localStorage.setItem("user_id", item.user_id);
-      localStorage.setItem("daily_scrum_id", item.daily_scrum_id);
+      localStorage.setItem("post_id", item.post_id);
       router.push({
         path: `/project/${item.project_id}`,
         query: { popup: "comment" }, 

@@ -142,7 +142,7 @@ const markAsRead = async (item) => {
     case "new_comment":
       // เก็บ user_id และ daily_scrum_id ไว้ใน localStorage
       localStorage.setItem("user_id", item.user_id);
-      localStorage.setItem("daily_scrum_id", item.daily_scrum_id);
+      localStorage.setItem("post_id", item.post_id);
 
       // ไปหน้า project และให้แสดง popup ตาม daily_scrum_id
       router.push({

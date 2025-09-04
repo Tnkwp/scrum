@@ -11,14 +11,14 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Daily-scrum Type
             </label>
-            <select
+            <el-select
               v-model="formData.type"
-              class="w-full border border-gray-300 rounded px-5 py-2"
+              placeholder="Select type"
+              class="w-full"
             >
-              <option value="daily">Daily scrum</option>
-              <option value="weekly">Weekly Scrum</option>
-              <option value="retrospective">Retrospective</option>
-            </select>
+              <el-option label="Daily Scrum" value="daily" />
+              <el-option label="Weekly Scrum" value="weekly" />
+            </el-select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -48,7 +48,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
               >ปัญหาวันนี้</label
             >
-            <select
+            <!-- <select
               v-model="formData.problem_level"
               class="border rounded px-2 py-2"
             >
@@ -56,7 +56,7 @@
               <option>minor</option>
               <option>moderate</option>
               <option>critical</option>
-            </select>
+            </select> -->
           </div>
 
           <textarea
@@ -75,12 +75,23 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
               >แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)</label
             >
-            <input
+            <!-- <input
               type="file"
               multiple
               @change="handleFileChange"
               class="w-full border rounded px-3 py-2"
-            />
+            /> -->
+            <el-upload
+      v-model:file-list="fileList"
+      class="upload-demo"
+      action=""
+      multiple
+      :auto-upload="false"
+      :on-remove="handleRemove"
+      :on-preview="handlePreview"
+    >
+      <el-button type="primary">Click to upload</el-button>
+    </el-upload>
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700 mb-1"
                 >ไฟล์ที่แนบ</label
@@ -176,6 +187,7 @@
               @change="handleFileChange"
               class="w-full border rounded px-3 py-2"
             />
+            
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700 mb-1"
                 >ไฟล์ที่แนบ</label
@@ -241,6 +253,7 @@
 import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const props = defineProps({
   visible: Boolean,
@@ -276,6 +289,7 @@ const formData = ref({
   created_at: formatDateForInput(today),
   files: [],
 });
+const fileList = ref([]);
 
 const handleFileChange = (e) => {
   formData.value.files = Array.from(e.target.files);
@@ -300,7 +314,7 @@ watch(
 const fetchScrumDetail = async (id) => {
   token.value = localStorage.getItem("token");
   try {
-    const res = await axios.get(`${backendUrl}/api/daily-scrum/${id}`, {
+    const res = await axios.get(`${backendUrl}/api/posts/${id}`, {
       headers: {
         Authorization: `Bearer ${token.value}`,
         "ngrok-skip-browser-warning": "true",
@@ -308,7 +322,7 @@ const fetchScrumDetail = async (id) => {
       withCredentials: true,
     });
 
-    const data = res.data.scrum;
+    const data = res.data.post;
     console.log("API Response:", res.data);
     formData.value.type = data.type || "daily";
     formData.value.today_task = data.today_task || "";
@@ -329,28 +343,36 @@ const fetchScrumDetail = async (id) => {
   }
 };
 
+const handleRemove = (file, uploadFiles) => {
+  console.log("Removed file:", file);
+};
+
 const deleteSingleFile = async (file) => {
   try {
     if (!props.scrumId) {
       Swal.fire({ icon: "warning", title: "ไม่พบ scrumId" });
       return;
     }
-
-    await axios.delete(`${backendUrl}/api/daily-scrum/${props.scrumId}/file`, {
-      data: { fileName: file.file_name }, // ส่งชื่อไฟล์ตามที่ backend ต้องการ
-      headers: {
-        Authorization: `Bearer ${token.value}`,
-        "ngrok-skip-browser-warning": "true",
-      },
+    await axios.delete(`${backendUrl}/api/posts/${props.scrumId}/file`, {
+      data: { fileName: file.file_name },
+      headers: { Authorization: `Bearer ${token.value}` },
     });
 
-    // อัพเดต state หลังลบ
-    formData.value.files = formData.value.files.filter((f) => f.id !== file.id);
-
+    formData.value.files = formData.value.files.filter(f => f.id !== file.id);
     Swal.fire({ icon: "success", title: "ลบไฟล์สำเร็จ" });
   } catch (error) {
     console.error("Error deleting file:", error);
     Swal.fire({ icon: "error", title: "ลบไฟล์ไม่สำเร็จ" });
+  }
+};
+
+const handlePreview = (file) => {
+  if (file.url) {
+    window.open(file.url);
+  } else if (file.raw) {
+    const reader = new FileReader();
+    reader.onload = e => window.open(e.target.result);
+    reader.readAsDataURL(file.raw);
   }
 };
 
@@ -361,21 +383,14 @@ const handleSubmit = async () => {
     const data = new FormData();
 
     for (const key in formData.value) {
-      if (key !== "files") {
-        const value = formData.value[key];
-        if (value !== undefined && value !== null && value !== "") {
-          data.append(key, value);
-        }
-      }
+      if (key !== "files") data.append(key, formData.value[key]);
     }
 
-    if (formData.value.files.length > 0) {
-      formData.value.files.forEach((file) => {
-        data.append("files", file);
-      });
-    }
+    fileList.value.forEach(file => {
+      data.append("files", file.raw);
+    });
 
-    await axios.put(`${backendUrl}/api/daily-scrum/${props.scrumId}`, data, {
+    await axios.put(`${backendUrl}/api/posts/${props.scrumId}`, data, {
       headers: {
         Authorization: `Bearer ${token.value}`,
         "ngrok-skip-browser-warning": "true",

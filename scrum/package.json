@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
     "@primeuix/themes": "^1.2.3",
     "@vuepic/vue-datepicker": "^11.0.2",
     "axios": "^1.8.4",

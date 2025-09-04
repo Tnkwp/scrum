@@ -18,7 +18,6 @@
             >
               <el-option label="Daily Scrum" value="daily" />
               <el-option label="Weekly Scrum" value="weekly" />
-              <el-option label="Retrospective" value="retrospective" />
             </el-select>
           </div>
           <div>
@@ -48,7 +47,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
               >ปัญหาวันนี้</label
             >
-            <select
+            <!-- <select
               v-model="formData.problem_level"
               class="border rounded px-2 py-2"
             >
@@ -56,7 +55,7 @@
               <option>minor</option>
               <option>moderate</option>
               <option>critical</option>
-            </select>
+            </select> -->
           </div>
           <textarea
             v-model="formData.problem"
@@ -169,11 +168,12 @@ const formatDateForInput = (d) => d.toISOString().split("T")[0];
 const maxDate = formatDateForInput(today);
 const minDate = formatDateForInput(yesterday);
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+
 const formData = ref({
   type: "daily",
   today_task: "",
   problem: "",
-  problem_level: "",
   tomorrow_task: "",
   good: "",
   bad: "",
@@ -211,7 +211,7 @@ const handleSubmit = async () => {
     }
 
     await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/daily-scrum`,
+      `${backendUrl}/api/posts`,
       data,
       {
         headers: {

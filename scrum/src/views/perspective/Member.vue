@@ -70,7 +70,7 @@
                 />
                 <div class="font-semibold">
                   {{ member.firstname }} {{ member.lastname }}
-                  <span class="text-[12px] font-thin">
+                  <span class="text-[10px] font-medium">
                     {{ formatDate(member.created_at) }}
                   </span>
                 </div>
@@ -87,7 +87,7 @@
             <template v-if="member.type === 'daily'">
               <div class="flex items-center gap-2">
                 <strong>ปัญหาวันนี้</strong>
-                <template v-if="member.problem_level">
+                <!-- <template v-if="member.problem_level">
                   <span
                     class="inline-block w-3 h-3 rounded-full"
                     :class="{
@@ -96,10 +96,10 @@
                       'bg-red-500': member.problem_level === 'critical',
                     }"
                   ></span>
-                </template>
-                <template v-else>
+                </template> -->
+                <!-- <template v-else>
                   <span class="text-sm text-gray-500">-</span>
-                </template>
+                </template> -->
               </div>
               <p class="mt-1 text-sm text-gray-700">
                 {{ member.problem || "-" }}
@@ -378,54 +378,53 @@ const fetchProject = async () => {
 const fetchScrumData = async () => {
   try {
     const res = await axios.get(
-      `${backendUrl}/api/daily-scrum/project/${projectId}`,
+      `${backendUrl}/api/posts/project/${projectId}`,
       {
         headers: { Authorization: `Bearer ${token.value}` },
         withCredentials: true,
       }
     );
-    const scrums = res.data.scrums;
+    const scrums = res.data.posts;
     const todayStr = new Date().toISOString().split("T")[0];
 
     scrumMemberss.value = scrums
-      .filter((scrum) => {
-        const createdDate = new Date(scrum.created_at)
+      .filter((post) => {
+        const createdDate = new Date(post.created_at)
           .toISOString()
           .split("T")[0];
         return createdDate === todayStr;
       })
-      .map((scrum) => ({
-        id: scrum.id,
-        type: scrum.type,
-        today: scrum.today_task,
-        problem: scrum.problem,
-        problem_level: scrum.problem_level,
-        tomorrow: scrum.tomorrow_task,
-        good: scrum.good,
-        bad: scrum.bad,
-        try: scrum.try,
-        next_sprint: scrum.next_sprint,
-        user_id: scrum.user.id,
-        firstname: scrum.user.firstname,
-        lastname: scrum.user.lastname,
-        profile_pic: scrum.user.profile_pic,
-        role: scrum.user.position,
-        file: scrum.files,
-        created_at: scrum.created_at,
+      .map((post) => ({
+        id: post.id,
+        type: post.type,
+        today: post.today_task,
+        problem: post.problem,
+        tomorrow: post.tomorrow_task,
+        good: post.good,
+        bad: post.bad,
+        try: post.try,
+        next_sprint: post.next_sprint,
+        user_id: post.user.id,
+        firstname: post.user.firstname,
+        lastname: post.user.lastname,
+        profile_pic: post.user.profile_pic,
+        role: post.user.position,
+        file: post.files,
+        created_at: post.created_at,
       }));
 
     hasSubmittedToday.value = scrumMemberss.value.some(
-      (scrum) => scrum.user_id === userId
+      (post) => post.user_id === userId
     );
 
     // Submitted / Not submitted
-    const todayScrums = scrums.filter((scrum) => {
-      const scrumDate = new Date(scrum.created_at).toISOString().split("T")[0];
+    const todayScrums = scrums.filter((post) => {
+      const scrumDate = new Date(post.created_at).toISOString().split("T")[0];
       return scrumDate === todayStr;
     });
     const seenUserIds = new Set();
     submittedUsers.value = todayScrums
-      .map((scrum) => scrum.user)
+      .map((post) => post.user)
       .filter((user) => {
         if (!seenUserIds.has(user.id)) {
           seenUserIds.add(user.id);
@@ -437,7 +436,7 @@ const fetchScrumData = async () => {
       (member) => !seenUserIds.has(member.id)
     );
   } catch (err) {
-    console.error("Error fetching scrum data:", err);
+    console.error("Error fetching post data:", err);
   }
 };
 
@@ -446,7 +445,7 @@ onMounted(async () => {
 
   // ตรวจสอบว่าเปิดจาก notification แบบ new_comment
   if (route.query.popup === "comment") {
-    const dailyScrumId = localStorage.getItem("daily_scrum_id");
+    const dailyScrumId = localStorage.getItem("post_id");
     if (dailyScrumId) {
       // หา member ที่ตรงกับ dailyScrumId
       const member = scrumMemberss.value.find(

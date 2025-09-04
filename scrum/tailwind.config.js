@@ -10,7 +10,7 @@ export default {
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
         manrope: ["Manrope", "sans-serif"],
-        noto: ["Noto Sans Thai", "sans-serif"],
+        noto: ['"Noto Sans Thai"', 'sans-serif'],
       },
       fontWeight: {
         thin: "100",

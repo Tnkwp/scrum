@@ -22,7 +22,7 @@
         </div>
         <div
           v-else-if="
-            props.data.type === 'weekly' || props.data.type === 'retrospective'
+            props.data.type === 'weekly'
           "
         >
           <p>
@@ -235,7 +235,7 @@ const props = defineProps({
 
 // console.log("userID",userStore.user)
 // console.log(dailyScrumId);
-console.log(props.data);
+console.log("userID",props.data);
 
 const emit = defineEmits(["close"]);
 

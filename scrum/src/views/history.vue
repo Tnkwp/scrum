@@ -179,8 +179,8 @@ const fetchScrumData = async () => {
     }));
 
     const sorted = mapped.sort(
-      // (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      // (a, b) => new Date(a.created_at) - new Date(b.created_at)
     );
 
     allScrumMembers.value = sorted;

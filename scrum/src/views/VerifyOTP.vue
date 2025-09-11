@@ -6,10 +6,10 @@
       class="flex justify-center bg-[#F3F4F6] w-[577px] h-[500px] rounded-[26px] shadow-lg"
     >
       <div class="mt-[62px] w-[450px] text-center">
-        <span class="text-[48px]">Verify OTP</span>
+        <span class="text-[48px]">ยืนยัน OTP</span>
         <div class="mt-2 text-[18px] text-gray-700">
           <p>
-            Please enter the OTP code sent to your email
+            กรอก OTP ที่ส่งเข้าไปใน email เพื่อยืนยันการรีเซตรหัสผ่าน
             <span class="font-semibold text-blue-600">{{ email }}</span>
           </p>
         </div>
@@ -45,7 +45,7 @@
             @click="handleVerify"
             class="bg-[#2563EB] text-[#F9FAFB] w-[231px] h-[52px] rounded-[10px] text-[20px]"
           >
-            Verify
+            ยืนยัน
           </button>
         </div>
       </div>

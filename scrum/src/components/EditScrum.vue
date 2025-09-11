@@ -24,13 +24,20 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">
               Date
             </label>
-            <input
+            <el-date-picker
+              v-model="formData.created_at"
+              type="date"
+              placeholder="เลือกวันที่"
+              :picker-options="datePickerOptions"
+              class="w-full mb-4"
+            />
+            <!-- <input
               type="date"
               v-model="formData.created_at"
               :min="canSubmitYesterday ? minDate : maxDate"
               :max="maxDate"
               class="w-full border border-gray-300 rounded px-3 py-2"
-            />
+            /> -->
           </div>
         </div>
 
@@ -82,16 +89,16 @@
               class="w-full border rounded px-3 py-2"
             /> -->
             <el-upload
-      v-model:file-list="fileList"
-      class="upload-demo"
-      action=""
-      multiple
-      :auto-upload="false"
-      :on-remove="handleRemove"
-      :on-preview="handlePreview"
-    >
-      <el-button type="primary">Click to upload</el-button>
-    </el-upload>
+              v-model:file-list="fileList"
+              class="upload-demo"
+              action=""
+              multiple
+              :auto-upload="false"
+              :on-remove="handleRemove"
+              :on-preview="handlePreview"
+            >
+              <el-button type="primary">Click to upload</el-button>
+            </el-upload>
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700 mb-1"
                 >ไฟล์ที่แนบ</label
@@ -181,13 +188,18 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
               >แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)</label
             >
-            <input
-              type="file"
+            <el-upload
+              v-model:file-list="fileList"
+              class="upload-demo"
+              action=""
               multiple
-              @change="handleFileChange"
-              class="w-full border rounded px-3 py-2"
-            />
-            
+              :auto-upload="false"
+              :on-remove="handleRemove"
+              :on-preview="handlePreview"
+            >
+              <el-button type="primary">Click to upload</el-button>
+            </el-upload>
+
             <div class="mt-4">
               <label class="block text-sm font-medium text-gray-700 mb-1"
                 >ไฟล์ที่แนบ</label
@@ -250,10 +262,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from "element-plus";
 
 const props = defineProps({
   visible: Boolean,
@@ -270,8 +282,8 @@ const yesterday = new Date();
 yesterday.setDate(today.getDate() - 1);
 
 const formatDateForInput = (d) => d.toISOString().split("T")[0];
-const maxDate = formatDateForInput(today);
-const minDate = formatDateForInput(yesterday);
+// const maxDate = formatDateForInput(today);
+// const minDate = formatDateForInput(yesterday);
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -290,6 +302,18 @@ const formData = ref({
   files: [],
 });
 const fileList = ref([]);
+
+const datePickerOptions = computed(() => ({
+  disabledDate: (time) => {
+    const todayTime = today.getTime();
+    const yesterdayTime = yesterday.getTime();
+    if (props.canSubmitYesterday) {
+      return time.getTime() < yesterdayTime || time.getTime() > todayTime;
+    } else {
+      return time.getTime() < todayTime || time.getTime() > todayTime;
+    }
+  },
+}));
 
 const handleFileChange = (e) => {
   formData.value.files = Array.from(e.target.files);
@@ -358,7 +382,7 @@ const deleteSingleFile = async (file) => {
       headers: { Authorization: `Bearer ${token.value}` },
     });
 
-    formData.value.files = formData.value.files.filter(f => f.id !== file.id);
+    formData.value.files = formData.value.files.filter((f) => f.id !== file.id);
     Swal.fire({ icon: "success", title: "ลบไฟล์สำเร็จ" });
   } catch (error) {
     console.error("Error deleting file:", error);
@@ -371,11 +395,10 @@ const handlePreview = (file) => {
     window.open(file.url);
   } else if (file.raw) {
     const reader = new FileReader();
-    reader.onload = e => window.open(e.target.result);
+    reader.onload = (e) => window.open(e.target.result);
     reader.readAsDataURL(file.raw);
   }
 };
-
 
 const handleSubmit = async () => {
   token.value = localStorage.getItem("token");
@@ -386,7 +409,7 @@ const handleSubmit = async () => {
       if (key !== "files") data.append(key, formData.value[key]);
     }
 
-    fileList.value.forEach(file => {
+    fileList.value.forEach((file) => {
       data.append("files", file.raw);
     });
 

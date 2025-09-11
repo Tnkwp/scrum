@@ -45,12 +45,6 @@
                 class="absolute right-0 mt-2 w-28 bg-white border border-gray-300 rounded shadow-md"
               >
                 <button
-                  class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  @click="editMember(member)"
-                >
-                  ✏️ แก้ไข
-                </button>
-                <button
                   class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-500"
                   @click="deleteMember(member)"
                 >
@@ -482,7 +476,7 @@ async function deleteMember(member) {
   if (!result.isConfirmed) return;
 
   try {
-    await axios.delete(`${backendUrl}/api/daily-scrum/${member.id}`, {
+    await axios.delete(`${backendUrl}/api/posts/${member.id}`, {
       headers: { Authorization: `Bearer ${token.value}` },
       withCredentials: true,
     });
@@ -507,7 +501,6 @@ async function deleteMember(member) {
 const handleDelete = async () => {
   const confirm = await Swal.fire({
     title: "คุณแน่ใจหรือไม่?",
-    text: "การลบนี้ไม่สามารถย้อนกลับได้!",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#DD5B5B",

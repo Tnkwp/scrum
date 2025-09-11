@@ -55,7 +55,7 @@
                   f.file_name.toLowerCase().endsWith('.pdf')
                 "
               >
-                <img src="/file.png" alt="" class="w-6 h-6" />
+                <img src="/pdf.png" alt="" class="w-6 h-6" />
               </template>
 
               <!-- Word -->

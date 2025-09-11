@@ -6,17 +6,16 @@
       class="flex justify-center bg-[#F3F4F6] w-[577px] h-[630px] rounded-[26px] shadow-lg"
     >
       <div class="mt-[62px] ">
-        <span class="text-[64px]">Forgot Password</span>
+        <span class="text-[64px]">ลืมรหัสผ่าน</span>
         <div>
           <span class="text-[20px]">
-            Please enter email address of the account that <br />
-            you want to reset password
+            กรอกอีเมลที่ต้องการจะรีเซตรหัสผ่าน
           </span>
         </div>
 
         <!-- Input Email -->
         <div class="mt-[30px]">
-          <span class="text-[20px]">Email</span>
+          <span class="text-[20px]">อีเมล</span>
           <input
             v-model="email"
             type="text"
@@ -31,7 +30,7 @@
             @click="handleSubmit"
             class="bg-[#2563EB] text-[#F9FAFB] w-[231px] h-[52px] rounded-[10px] text-[20px]"
           >
-            Continue
+            ยืนยัน
           </button>
         </div>
       </div>

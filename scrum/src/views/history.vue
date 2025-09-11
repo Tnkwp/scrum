@@ -3,9 +3,12 @@
     <!-- Header -->
     <div class="flex justify-between items-center px-6 py-4  sticky top-0 z-10 bg-[#E8FFF1]">
       <!-- Back -->
-      <button @click="goBack" class="hover:scale-110 transition">
-        <img src="/left-arrow.png" alt="Back" class="w-6 h-6" />
+      <div class="flex">
+        <button @click="goBack" class="hover:scale-110 transition" >
+        <img src="/left-arrow.png" alt="Back" class="w-6 h-6" /> 
       </button>
+      <div>scrum history</div>
+      </div>
 
       <!-- Date filter -->
       <div class="flex gap-6 items-end">
@@ -57,7 +60,7 @@
               class="w-12 h-12 rounded-full object-cover shadow"
             />
             <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-2 flex-wrap justify-between">
                 <span class="font-semibold text-gray-800 text-base">
                   {{ card.firstname }} {{ card.lastname }}
                 </span>

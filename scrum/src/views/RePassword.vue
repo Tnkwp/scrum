@@ -6,15 +6,14 @@
       class="flex justify-center bg-[#F3F4F6] w-[577px] h-[550px] rounded-[26px] shadow-lg"
     >
       <div class="mt-[62px] w-[450px]">
-        <h1 class="text-[48px] text-center">Reset Password</h1>
+        <h1 class="text-[48px] text-center">รีเซตรหัสผ่าน</h1>
         <p class="text-center text-[18px] text-gray-600 mt-2">
-          Please enter your new password for
-          <span class="font-semibold text-blue-600">{{ email }}</span>
+          กรอกรหัสผ่านใหม่
         </p>
 
         <!-- New Password -->
         <div class="mt-[30px]">
-          <label class="text-[20px]">New Password</label>
+          <label class="text-[20px]">รหัสผ่านใหม่</label>
           <input
             v-model="password"
             type="password"
@@ -25,7 +24,7 @@
 
         <!-- Confirm Password -->
         <div class="mt-[20px]">
-          <label class="text-[20px]">Confirm Password</label>
+          <label class="text-[20px]">ยืนยันรหัสผ่านใหม่</label>
           <input
             v-model="confirmPassword"
             type="password"

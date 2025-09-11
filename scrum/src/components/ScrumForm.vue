@@ -24,13 +24,20 @@
             <label class="block text-sm font-medium text-gray-700 mb-1"
               >Date</label
             >
-            <input
+            <el-date-picker
+              v-model="formData.created_at"
+              type="date"
+              placeholder="เลือกวันที่"
+              :picker-options="datePickerOptions"
+              class="w-full mb-4"
+            />
+            <!-- <input
               type="date"
               v-model="formData.created_at"
               :min="canSubmitYesterday ? minDate : maxDate"
               :max="maxDate"
               class="w-full border border-gray-300 rounded px-3 py-2"
-            />
+            /> -->
           </div>
         </div>
 
@@ -72,12 +79,19 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
               แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
             </label>
-            <input
-              type="file"
+            <el-upload
+              v-model:file-list="fileList"
+              class="upload-demo"
+              action=""
               multiple
-              @change="handleFileChange"
-              class="w-full border rounded px-3 py-2"
-            />
+              :auto-upload="false"
+              :on-change="handleChange"
+              :on-remove="handleRemove"
+              :on-preview="handlePreview"
+              list-type="text"
+            >
+              <el-button type="primary">Click to upload</el-button>
+            </el-upload>
           </div>
         </div>
 
@@ -121,12 +135,19 @@
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
               แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
             </label>
-            <input
-              type="file"
+            <el-upload
+              v-model:file-list="fileList"
+              class="upload-demo"
+              action=""
               multiple
-              @change="handleFileChange"
-              class="w-full border rounded px-3 py-2"
-            />
+              :auto-upload="false"
+              :on-change="handleChange"
+              :on-remove="handleRemove"
+              :on-preview="handlePreview"
+              list-type="text"
+            >
+              <el-button type="primary">Click to upload</el-button>
+            </el-upload>
           </div>
         </div>
 
@@ -148,9 +169,10 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { ElMessage } from "element-plus";
 
 const props = defineProps({
   visible: Boolean,
@@ -165,8 +187,8 @@ const yesterday = new Date();
 yesterday.setDate(today.getDate() - 1);
 
 const formatDateForInput = (d) => d.toISOString().split("T")[0];
-const maxDate = formatDateForInput(today);
-const minDate = formatDateForInput(yesterday);
+// const maxDate = formatDateForInput(today);
+// const minDate = formatDateForInput(yesterday);
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -183,9 +205,30 @@ const formData = ref({
   created_at: formatDateForInput(today),
   files: [],
 });
+const fileList = ref([]);
 
-const handleFileChange = (e) => {
-  formData.value.files = Array.from(e.target.files);
+const datePickerOptions = computed(() => ({
+  disabledDate: (time) => {
+    const todayTime = today.getTime();
+    const yesterdayTime = yesterday.getTime();
+    if (props.canSubmitYesterday) {
+      return time.getTime() < yesterdayTime || time.getTime() > todayTime;
+    } else {
+      return time.getTime() < todayTime || time.getTime() > todayTime;
+    }
+  },
+}));
+
+const handlePreview = (file) => {
+  console.log("Preview:", file);
+};
+
+const handleChange = (uploadFile, uploadFiles) => {
+  formData.value.files = uploadFiles.map((f) => f.raw);
+};
+
+const handleRemove = (file, fileListNew) => {
+  formData.value.files = fileListNew.map((f) => f.raw);
 };
 
 const handleSubmit = async () => {
@@ -206,21 +249,17 @@ const handleSubmit = async () => {
     // แนบไฟล์ทีละไฟล์
     if (formData.value.files.length > 0) {
       formData.value.files.forEach((file) => {
-        data.append("files", file); // ชื่อ key ต้องตรงกับ API
+        data.append("files", file);
       });
     }
 
-    await axios.post(
-      `${backendUrl}/api/posts`,
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: true,
-      }
-    );
+    await axios.post(`${backendUrl}/api/posts`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+      withCredentials: true,
+    });
 
     Swal.fire({ icon: "success", title: "บันทึกสำเร็จ", timer: 1500 });
     emit("submitted");
@@ -231,3 +270,4 @@ const handleSubmit = async () => {
   }
 };
 </script>
+

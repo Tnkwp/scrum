@@ -4,8 +4,8 @@
       class="px-4 py-2 w-full shadow-md bg-[#059669] font-noto flex justify-between #324671"
     >
       <div class="flex items-center gap-3">
-        <!-- <img src="/images.webp" alt="" class="w-10 h-10 rounded-full" /> -->
-        <span class="font-bold">Daily Scrum</span>
+        <img src="/logo.png" alt="" class="w-7 h-7 rounded-full" />
+        <span class="font-bold">Daily Log</span>
       </div>
       <div>
         <div class="flex items-center gap-3">

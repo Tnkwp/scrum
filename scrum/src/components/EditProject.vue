@@ -32,12 +32,13 @@
           </div>
           <div class="flex flex-col gap-2">
             <label class="text-sm">Daily Scrum Time</label>
-            <!-- <el-time-picker
+            <el-time-picker
               v-model="form.scrum_time"
               arrow-control
               placeholder="time"
-            /> -->
-            <input v-model="form.scrum_time" type="time" class="input" />
+              value-format="HH:mm:ss"
+            />
+            <!-- <input v-model="form.scrum_time" type="time" class="input" /> -->
           </div>
         </div>
 

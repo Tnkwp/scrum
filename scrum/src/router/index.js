@@ -1,9 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
-import AddDaily from "../views/AddDaily.vue";
-import Info from "../views/info.vue";
-import NotFound from "../views/NotFound.vue";
-import EditDaily from "../views/EditDaily.vue";
 import Register from "../views/register.vue";
 import Forget from "../views/Forgot.vue";
 import History from "../views/history.vue"
@@ -25,24 +21,6 @@ const routes = [
     name: "Homepage",
     component: Homepage,
     meta: { requiresAuth: true }, 
-  },
-  {
-    path: "/add-daily",
-    name: "AddDaily",
-    component: AddDaily,
-    meta: { requiresAuth: true }, 
-  },
-  {
-    path: "/info",
-    name: "Info", 
-    component: Info,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/daily-scrum/:id",
-    name: "EditDaily",
-    component: EditDaily,
-    meta: { requiresAuth: true },
   },
   {
     path: "/register",
@@ -78,11 +56,6 @@ const routes = [
     path: "/editprofile",
     name: "EditProfile",
     component: EditProfile,
-  },
-  {
-    path: "/:pathMatch(.*)*",
-    name: "NotFound",
-    component: NotFound,
   },
   {
     path: "/all-notifications",

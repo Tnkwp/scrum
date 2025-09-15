@@ -6,22 +6,22 @@
     <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
       <div class="space-y-4">
         <!-- Daily-scrum Type -->
-        <div class="flex justify-between">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
-              Daily-scrum Type
+        <div class="flex justify-between gap-3">
+          <div class="w-full">
+            <label class="font-medium text-gray-700 mb-1 w-full">
+              Scrum Type
             </label>
             <el-select
               v-model="formData.type"
               placeholder="Select type"
-              class="w-full"
+              class=""
             >
               <el-option label="Daily Scrum" value="daily" />
               <el-option label="Weekly Scrum" value="weekly" />
             </el-select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="font-medium text-gray-700 mb-1">
               Date
             </label>
             <el-date-picker
@@ -43,16 +43,16 @@
 
         <!-- Fields -->
         <div v-if="formData.type === 'daily'">
-          <label class="block text-sm font-medium text-gray-700 mb-1"
+          <label class="block font-medium text-gray-700 mb-1"
             >สิ่งที่ทำวันนี้</label
           >
           <textarea
             v-model="formData.today_task"
-            class="w-full border rounded px-3 py-2 h-20"
+            class="w-full border rounded px-3 py-2 h-20 text-sm"
           />
 
           <div class="flex gap-2 items-center mb-1 mt-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+            <label class="block font-medium text-gray-700 mb-1 mt-2"
               >ปัญหาวันนี้</label
             >
             <!-- <select
@@ -68,18 +68,18 @@
 
           <textarea
             v-model="formData.problem"
-            class="w-full border rounded px-3 py-2 h-20"
+            class="w-full border rounded px-3 py-2 h-20 text-sm"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+          <label class="block font-medium text-gray-700 mb-1 mt-2"
             >พรุ่งนี้ทำอะไร</label
           >
           <textarea
             v-model="formData.tomorrow_task"
-            class="w-full border rounded px-3 py-2 h-20"
+            class="w-full border rounded px-3 py-2 h-20 text-sm"
           />
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
+            <label class="block font-medium text-gray-700 mb-1 mt-2"
               >แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)</label
             >
             <!-- <input

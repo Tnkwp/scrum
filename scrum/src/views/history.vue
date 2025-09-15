@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#E8FFF1] to-[#CFF5E7] font-noto pt-6">
+  <div class="min-h-screen bg-gradient-to-br from-[#E8FFF1] to-[#CFF5E7] font-noto pt-24">
     <!-- Header -->
-    <div class="flex justify-between items-center px-6 py-4  sticky top-0 z-10 bg-[#E8FFF1]">
+    <div class="flex justify-between items-center px-6 pt-[50px] pb-2 fixed w-full top-0 z-10 bg-[#E8FFF1]">
       <!-- Back -->
       <div class="flex">
         <button @click="goBack" class="hover:scale-110 transition" >
@@ -200,7 +200,12 @@ const formatDate = (dateStr) => {
 
 const applyDateFilter = () => {
   const from = fromDate.value ? new Date(fromDate.value) : null;
-  const to = toDate.value ? new Date(toDate.value) : null;
+  let to = toDate.value ? new Date(toDate.value) : null;
+
+  // ถ้ามี toDate ให้ set เวลาเป็น 23:59:59 ของวันนั้น
+  if (to) {
+    to.setHours(23, 59, 59, 999);
+  }
 
   scrumMembers.value = allScrumMembers.value.filter((post) => {
     const createdDate = new Date(post.created_at);

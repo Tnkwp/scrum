@@ -13,7 +13,7 @@
     >
       <!-- Title -->
       <div class="flex justify-center mb-8 sm:mb-12">
-        <label class="text-3xl sm:text-5xl font-noto">Login</label>
+        <label class="text-3xl sm:text-5xl font-noto">LogIn</label>
       </div>
 
       <!-- Email -->

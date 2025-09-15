@@ -5,7 +5,7 @@
     >
       <div class="flex items-center gap-3">
         <img src="/logo.png" alt="" class="w-7 h-7 rounded-full" />
-        <span class="font-bold">Daily Log</span>
+        <span class="font-bold text-white">Daily Log</span>
       </div>
       <div>
         <div class="flex items-center gap-3">
@@ -14,7 +14,7 @@
         </button> -->
         </div>
         <div class="flex justify-end items-center relative">
-          <div class="flex gap-2">
+          <div class="flex gap-3">
             <button>
               <NotificationBell />
             </button>
@@ -33,7 +33,7 @@
           </div>
           <div
             v-if="showMenu"
-            class="absolute right-0 top-10 mt-2 w-32 bg-white shadow rounded z-10 w-[170px] px-2 py-2"
+            class="absolute right-0 top-10 mt-2 w-32 bg-white shadow rounded z-10 w-auto px-2 py-2"
           >
             <div class="flex justify-center border-b gap-2">
               <div>

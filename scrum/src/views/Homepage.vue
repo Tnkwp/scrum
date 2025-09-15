@@ -6,11 +6,11 @@
           <!-- Add New Project -->
           <div
             @click="showModal = true"
-            class="bg-white rounded-lg h-40 flex justify-center items-center shadow-md cursor-pointer"
+            class="bg-white rounded-lg h-41 flex justify-center items-center shadow-md cursor-pointer"
           >
             <div class="text-center cursor-pointer">
               <div class="text-4xl font-bold">+</div>
-              <div>Add Project Title</div>
+              <div>Add Project</div>
             </div>
           </div>
 
@@ -22,9 +22,9 @@
                 :title="project.title"
                 :status="formatStatus(project.status)"
                 :end="formatDate(project.deadline_date)"
-                :owner="getOwnerImage(project.members)"
+                :owner="getOwnerInfo(project.members)"
                 :members="project.members"
-                :memberImages="getMemberImages(project.members)"
+                :memberImages="getMemberInfo(project.members)"
                 :projectId="project.id"
                 :isPinned="getIsPinned(project)"
                 :currentUserId="currentUserId.value"
@@ -100,19 +100,31 @@ const formatDate = (dateString) => {
 const defaultAvatar = "/user.png"; // ใส่ path รูป default ของคุณ
 
 // ฟังก์ชันดึงภาพเจ้าของโปรเจกต์ (สมมติเจ้าของคือสมาชิกคนแรก)
-const getOwnerImage = (members) => {
-  if (!members || members.length === 0) return defaultAvatar;
+const getOwnerInfo = (members) => {
+  if (!members || members.length === 0) {
+    return { profile_pic: defaultAvatar, firstname: '', lastname: '' };
+  }
+
   const owner = members.find((member) => member.position === "Project Manager");
-  return owner?.profile_pic || defaultAvatar;
+
+  return {
+    profile_pic: owner?.profile_pic || defaultAvatar,
+    firstname: owner?.firstname || '',
+    lastname: owner?.lastname || ''
+  };
 };
 
 // ฟังก์ชันดึงภาพสมาชิกที่เหลือ (เว้นเจ้าของ)
-const getMemberImages = (members) => {
+const getMemberInfo = (members) => {
   if (!members || members.length === 0) return [];
 
   return members
     .filter((member) => member.position !== "Project Manager")
-    .map((member) => member.profile_pic || defaultAvatar);
+    .map((member) => ({
+      profile_pic: member.profile_pic || defaultAvatar,
+      firstname: member.firstname || '',
+      lastname: member.lastname || ''
+    }));
 };
 
 const handleTogglePin = (id) => {

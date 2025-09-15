@@ -9,7 +9,7 @@
         <div class="flex justify-between">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Daily-scrum Type
+              Scrum Type
             </label>
             <el-select
               v-model="formData.type"

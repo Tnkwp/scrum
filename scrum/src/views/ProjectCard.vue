@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-xl p-4 shadow-md relative text-sm cursor-pointer"
+    class="rounded-xl p-4 shadow-md relative text-sm"
     :class="[isMember ? 'bg-white' : 'bg-gray-200 opacity-60']"
   >
     <!-- Status badge -->
@@ -29,7 +29,7 @@
     </button>
 
     <!-- Title and basic info -->
-    <div @click="goToProjectPage">
+    <div @click="goToProjectPage" class="cursor-pointer">
       <div class="mb-1 mt-3">
         <p
           class="font-semibold text-gray-800 truncate w-full"

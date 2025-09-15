@@ -32,33 +32,31 @@
             </button>
           </div>
           <div
-  v-if="showMenu"
-  class="absolute right-0 top-10 mt-2 bg-white shadow rounded z-10 w-[170px] px-2 py-2"
->
-  <div class="flex justify-center border-b gap-2">
-    <div class="w-auto">
-      <span class="truncate">{{ user.firstname }}</span>
-    </div>
-    <div class="w-auto">
-      <span class="truncate">{{ user.lastname }}</span>
-    </div>
-  </div>
+            v-if="showMenu"
+            class="absolute right-0 top-10 mt-2 bg-white shadow rounded z-10 min-w-[180px] px-2 py-2"
+          >
+            <div class="flex justify-center border-b gap-2 py-2">
+              <span class="font-semibold">{{ user.firstname }}</span>
+              <span class="font-semibold">{{ user.lastname }}</span>
+            </div>
 
-  <router-link
-    to="/editprofile"
-    @click="showMenu = false"
-    class="block w-full text-left py-2 hover:bg-gray-100 border-b"
-  >
-    Edit Profile
-  </router-link>
+            <!-- ปุ่ม Edit Profile -->
+            <router-link
+              to="/editprofile"
+              @click="showMenu = false"
+              class="block w-full text-left py-2 hover:bg-gray-100 border-b whitespace-nowrap"
+            >
+              Edit Profile
+            </router-link>
 
-  <button
-    @click="handleLogout"
-    class="block w-full text-left py-2 hover:bg-gray-100"
-  >
-    Logout
-  </button>
-</div>
+            <!-- ปุ่ม Logout -->
+            <button
+              @click="handleLogout"
+              class="block w-full text-left py-2 hover:bg-gray-100 whitespace-nowrap"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </nav>
@@ -93,7 +91,7 @@ const closeMenuOnClickOutside = (event) => {
     showMenu.value = false;
   }
 };
- 
+
 onMounted(async () => {
   document.addEventListener("click", closeMenuOnClickOutside);
 

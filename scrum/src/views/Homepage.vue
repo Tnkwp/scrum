@@ -16,20 +16,20 @@
 
           <!-- Project Card Component -->
           <ProjectCard
-                v-for="project in sortedProjects"
-                :key="project.id"
-                :project="project"
-                :title="project.title"
-                :status="formatStatus(project.status)"
-                :end="formatDate(project.deadline_date)"
-                :owner="getOwnerInfo(project.members)"
-                :members="project.members"
-                :memberImages="getMemberInfo(project.members)"
-                :projectId="project.id"
-                :isPinned="getIsPinned(project)"
-                :currentUserId="currentUserId.value"
-                @toggle-pin="togglePin"
-              />
+            v-for="project in sortedProjects"
+            :key="project.id"
+            :project="project"
+            :title="project.title"
+            :status="formatStatus(project.status)"
+            :end="formatDate(project.deadline_date)"
+            :owner="getOwnerInfo(project.members)"
+            :members="project.members"
+            :memberImages="getMemberInfo(project.members)"
+            :projectId="project.id"
+            :isPinned="getIsPinned(project)"
+            :currentUserId="currentUserId.value"
+            @toggle-pin="togglePin"
+          />
         </div>
         <ProjectFormModal
           v-if="showModal"
@@ -38,6 +38,11 @@
         />
       </div>
     </div>
+    <button
+      class="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center shadow-md hover:bg-gray-400 transition"
+    >
+      <img src="/graphic.png" alt="graphic" class="w-7 h-7" />
+    </button>
   </div>
 </template>
 
@@ -63,8 +68,10 @@ const addProject = (newProject) => {
 };
 
 const getIsPinned = (project) => {
-  return computed(() =>
-    project.members.find((m) => m.id === currentUserId.value)?.is_pinned ?? false
+  return computed(
+    () =>
+      project.members.find((m) => m.id === currentUserId.value)?.is_pinned ??
+      false
   );
 };
 
@@ -102,15 +109,15 @@ const defaultAvatar = "/user.png"; // ใส่ path รูป default ของ
 // ฟังก์ชันดึงภาพเจ้าของโปรเจกต์ (สมมติเจ้าของคือสมาชิกคนแรก)
 const getOwnerInfo = (members) => {
   if (!members || members.length === 0) {
-    return { profile_pic: defaultAvatar, firstname: '', lastname: '' };
+    return { profile_pic: defaultAvatar, firstname: "", lastname: "" };
   }
 
   const owner = members.find((member) => member.position === "Project Manager");
 
   return {
     profile_pic: owner?.profile_pic || defaultAvatar,
-    firstname: owner?.firstname || '',
-    lastname: owner?.lastname || ''
+    firstname: owner?.firstname || "",
+    lastname: owner?.lastname || "",
   };
 };
 
@@ -122,8 +129,8 @@ const getMemberInfo = (members) => {
     .filter((member) => member.position !== "Project Manager")
     .map((member) => ({
       profile_pic: member.profile_pic || defaultAvatar,
-      firstname: member.firstname || '',
-      lastname: member.lastname || ''
+      firstname: member.firstname || "",
+      lastname: member.lastname || "",
     }));
 };
 
@@ -138,16 +145,18 @@ const sortedProjects = computed(() => {
   if (!currentUserId.value) return projects.value;
 
   return [...projects.value].sort((a, b) => {
-    const aIsMember = a.members.some(m => m.id === currentUserId.value);
-    const bIsMember = b.members.some(m => m.id === currentUserId.value);
+    const aIsMember = a.members.some((m) => m.id === currentUserId.value);
+    const bIsMember = b.members.some((m) => m.id === currentUserId.value);
 
     // If only one is a member, that one comes first
     if (aIsMember && !bIsMember) return -1;
     if (!aIsMember && bIsMember) return 1;
 
     // If both are members or both are not members, sort by pinned
-    const aPinned = a.members.find(m => m.id === currentUserId.value)?.is_pinned ?? false;
-    const bPinned = b.members.find(m => m.id === currentUserId.value)?.is_pinned ?? false;
+    const aPinned =
+      a.members.find((m) => m.id === currentUserId.value)?.is_pinned ?? false;
+    const bPinned =
+      b.members.find((m) => m.id === currentUserId.value)?.is_pinned ?? false;
 
     if (aPinned && !bPinned) return -1;
     if (!aPinned && bPinned) return 1;
@@ -155,7 +164,6 @@ const sortedProjects = computed(() => {
     return a.id - b.id; // fallback by project ID
   });
 });
-
 
 // สลับ pin/unpin
 const togglePin = async (projectId) => {
@@ -177,11 +185,11 @@ const togglePin = async (projectId) => {
   if (!member) {
     // 🚨 Not a member
     await Swal.fire({
-      icon: 'warning',
-      title: 'คุณไม่ใช่สมาชิกของโปรเจกต์นี้',
-      text: 'ไม่สามารถปักหมุดหรือเลิกปักหมุดได้',
-      confirmButtonText: 'ตกลง',
-      confirmButtonColor: '#28a745'
+      icon: "warning",
+      title: "คุณไม่ใช่สมาชิกของโปรเจกต์นี้",
+      text: "ไม่สามารถปักหมุดหรือเลิกปักหมุดได้",
+      confirmButtonText: "ตกลง",
+      confirmButtonColor: "#28a745",
     });
     return;
   }

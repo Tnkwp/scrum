@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-xl p-4 shadow-md relative text-sm"
+    class="rounded-xl p-4 shadow-md relative text-sm hover:shadow-xl transition"
     :class="[isMember ? 'bg-white' : 'bg-gray-200 opacity-60']"
   >
     <!-- Status badge -->

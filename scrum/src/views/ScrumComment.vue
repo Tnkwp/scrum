@@ -320,7 +320,7 @@ async function updateComment() {
 
   try {
     await axios.put(
-      `${backendUrl}/api/comments/${editingCommentId.value}`,
+      `${backendUrl}/api/comments/comment/${editingCommentId.value}`,
       { comment: newComment.value },
       {
         headers: {
@@ -366,7 +366,7 @@ async function deleteComment(id) {
   if (!result.isConfirmed) return;
 
   try {
-    await axios.delete(`${backendUrl}/api/comments/${id}`, {
+    await axios.delete(`${backendUrl}/api/comments/comment/${id}`, {
       headers: {
         Authorization: `Bearer ${token.value}`,
         "ngrok-skip-browser-warning": "true",

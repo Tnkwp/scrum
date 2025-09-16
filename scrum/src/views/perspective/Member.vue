@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-[#F0FDF4] font-noto pt-8">
+  <div class="min-h-screen bg-[#F0FDF4] font-noto pt-12">
     <div class="p-6">
       <div class="flex justify-between items-center text-black">
         <div v-if="project">
           <h1 class="text-lg font-medium">
             <div class="flex gap-2">
               <router-link to="/homepage">
-                <img src="/left-arrow.png" alt="" class="w-6 h-6"/>
+                <img src="/left-arrow.png" alt="" class="w-6 h-6" />
               </router-link>
               <span>Project's Title:</span>
               <span class="font-semibold">{{ project.title }}</span>
@@ -16,245 +16,283 @@
         <p>DATE : {{ getTodayDate() }}</p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <!-- Scrum Members -->
-        <div class="lg:col-span-2 space-y-4" v-if="project?.status !== 'done'">
+      <div class="lg:px-[140px]">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <!-- ฝั่งซ้าย: Scrum Summary + ปุ่ม -->
           <div
-            v-for="(member, index) in scrumMemberss"
-            :key="index"
-            class="relative bg-white p-4 rounded-lg shadow cursor-pointer"
-            @click="openPopup(member)"
-            @mouseenter="handleMouseEnter(index)"
-            @mouseleave="handleMouseLeave"
+            :class="[
+              project?.status === 'done'
+                ? 'lg:col-span-3 flex justify-center'
+                : 'lg:col-span-2',
+            ]"
           >
-            <!-- จุด 3 จุด -->
-            <div
-              class="absolute top-2 right-2 z-20"
-              v-if="hoveredIndex === index"
-              @click.stop
-            >
-              <button
-                class="text-gray-500 w-6 rounded-full hover:text-black hover:bg-gray-100 focus:outline-none"
-                @click="toggleDropdown(index)"
-              >
-                ⋮
-              </button>
+            <div>
+              <div class="bg-white rounded-lg p-4 shadow relative">
+                <!-- หัวข้อ -->
+                <h2 class="text-xl font-semibold text-center">
+                  Scrum's Summary
+                </h2>
 
-              <div
-                v-if="activeDropdownIndex === index"
-                class="absolute right-0 mt-2 w-28 bg-white border border-gray-300 rounded shadow-md"
-              >
-                <button
-                  class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-500"
-                  @click="deleteMember(member)"
+                <!-- เมนู 3 จุด (เฉพาะ Project Manager) -->
+                <div
+                  v-if="position === 'Project Manager'"
+                  class="absolute top-2 right-2"
                 >
-                  🗑️ ลบ
-                </button>
-              </div>
-            </div>
+                  <div class="relative" @click.stop="showMenu = !showMenu">
+                    <!-- ไอคอน 3 จุด -->
+                    <button class="p-2 rounded hover:bg-gray-100">⋮</button>
 
-            <!-- การ์ด -->
-            <div class="flex justify-between items-center mb-2">
-              <div class="flex items-center space-x-3">
-                <img
-                  :src="member?.profile_pic || '/user.png'"
-                  referrerpolicy="no-referrer"
-                  alt="profile"
-                  class="w-10 h-10 border-2 border-gray-300 rounded-full object-cover"
-                />
-                <div class="font-semibold">
-                  {{ member.firstname }} {{ member.lastname }}
-                  <span class="text-[10px] font-medium">
-                    {{ formatDate(member.created_at) }}
-                  </span>
-                </div>
-              </div>
-              <span class="bg-gray-200 text-xs px-3 py-1 rounded-full">
-                {{ member.role }}
-              </span>
-            </div>
-
-            <!-- เนื้อหา -->
-            <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today }}</p>
-
-            <!-- Daily -->
-            <template v-if="member.type === 'daily'">
-              <div class="flex items-center gap-2">
-                <strong>ปัญหาวันนี้</strong>
-                <!-- <template v-if="member.problem_level">
-                  <span
-                    class="inline-block w-3 h-3 rounded-full"
-                    :class="{
-                      'bg-green-500': member.problem_level === 'minor',
-                      'bg-yellow-500': member.problem_level === 'moderate',
-                      'bg-red-500': member.problem_level === 'critical',
-                    }"
-                  ></span>
-                </template> -->
-                <!-- <template v-else>
-                  <span class="text-sm text-gray-500">-</span>
-                </template> -->
-              </div>
-              <p class="mt-1 text-sm text-gray-700">
-                {{ member.problem || "-" }}
-              </p>
-              <p>
-                <strong>พรุ่งนี้ทำอะไร</strong><br />{{
-                  member.tomorrow || "-"
-                }}
-              </p>
-            </template>
-
-            <!-- Retrospective -->
-            <template
-              v-else-if="
-                member.type === 'weekly' || member.type === 'retrospective'
-              "
-            >
-              <p><strong>Good</strong><br />{{ member.good || "-" }}</p>
-              <p><strong>Bad</strong><br />{{ member.bad || "-" }}</p>
-              <p><strong>Try</strong><br />{{ member.try || "-" }}</p>
-              <p>
-                <strong>Next Sprint</strong><br />{{
-                  member.next_sprint || "-"
-                }}
-              </p>
-            </template>
-          </div>
-        </div>
-
-        <ScrumComment
-          v-if="showPopupp"
-          :visible="showPopupp"
-          :data="selectedMember"
-          @close="showPopupp = false"
-        />
-
-        <!-- Summary -->
-        <div
-          :class="[
-            project?.status === 'done'
-              ? 'lg:col-span-3 flex justify-center'
-              : '',
-          ]"
-        >
-          <div>
-            <div
-              class="bg-white rounded-lg p-4 shadow "
-            >
-              <h2 class="text-xl font-semibold mb-4 text-center">
-                Scrum's Summary
-              </h2>
-              <div class="flex justify-between px-5">
-                <div>
-                  <div class="mb-2">
-                    <p class="font-bold">คนที่ส่งแล้ว</p>
-                    <ul class="ml-4 text-sm space-y-1">
-                      <li v-for="user in submittedUsers" :key="user.id">
-                        - {{ user.firstname }} {{ user.lastname }} ({{
-                          user.position
-                        }}) {{ user.scrum_point }} คะแนน
-                      </li>
-                    </ul>
+                    <!-- เมนู dropdown -->
+                    <div
+                      v-if="showMenu"
+                      class="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-10"
+                    >
+                      <button
+                        @click="openEditModal(projectId)"
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Edit Project
+                      </button>
+                      <button
+                        @click="handleDelete"
+                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      >
+                        Delete Project
+                      </button>
+                    </div>
                   </div>
-
-                  <p class="font-bold mt-4">คนที่ยังไม่ได้ส่ง</p>
-                  <ul class="ml-4 text-sm space-y-1">
-                    <li v-for="member in notSubmittedUsers" :key="member.id">
-                      - {{ member.firstname }} {{ member.lastname }} ({{
-                        member.position
-                      }}) {{ member.scrum_point }} คะแนน
-                    </li>
-                  </ul>
                 </div>
 
-                <div v-if="project" class="mt-4 text-sm">
+                <!-- เนื้อหาเดิม -->
+                <div v-if="project" class="mt-4 mb-4 text-sm text-center">
                   <p>
                     <strong>Deadline Date:</strong>
                     {{ formatDate(project.deadline_date) }}
                   </p>
                 </div>
+
+                <div class="flex justify-center px-5">
+                  <div>
+                    <div class="mb-2">
+                      <p class="font-bold mb-2">คนที่ส่งแล้ว</p>
+                      <ul class="ml-4 text-sm space-y-1">
+                        <li
+                          v-for="user in submittedUsers"
+                          :key="user.id"
+                          class="flex justify-between gap-4"
+                        >
+                          <div>
+                            <span>
+                              {{ user.firstname }} {{ user.lastname }} ({{
+                                user.position
+                              }})
+                            </span>
+                          </div>
+                          <div>
+                            <span class="font-mediu">
+                              {{ user.scrum_point }} คะแนน
+                            </span>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div class="border-t pt-2">
+                      <p class="font-bold mb-2">คนที่ยังไม่ได้ส่ง</p>
+                      <ul class="ml-4 text-sm space-y-1">
+                        <li
+                          v-for="member in notSubmittedUsers"
+                          :key="member.id"
+                          class="flex justify-between"
+                        >
+                          <span>
+                            {{ member.firstname }} {{ member.lastname }} ({{
+                              member.position
+                            }})
+                          </span>
+                          <span class="font-medium">
+                            {{ member.scrum_point }} คะแนน
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ปุ่ม -->
+              <div class="space-y-4 mt-6">
+                <template v-if="position === 'Project Manager'">
+                  <div class="flex gap-4">
+                    <button
+                      @click="markProjectAsDone"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                    >
+                      Mark Project as done
+                    </button>
+                    <button
+                      @click="goToHistory"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                    >
+                      Post History
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      v-if="!hasSubmittedToday"
+                      @click="showPopup = true"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                    >
+                      Create post
+                    </button>
+
+                    <button
+                      v-else
+                      @click="openEditPopup(getTodayScrumId())"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                    >
+                      Update post
+                    </button>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <button
+                    @click="goToHistory"
+                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                  >
+                    Post History
+                  </button>
+                  <div>
+                    <button
+                      v-if="!hasSubmittedToday"
+                      @click="showPopup = true"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                    >
+                      Create post
+                    </button>
+
+                    <button
+                      v-else
+                      @click="openEditPopup(getTodayScrumId())"
+                      class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
+                    >
+                      Update post
+                    </button>
+                  </div>
+                </template>
               </div>
             </div>
+          </div>
 
-            <!-- Buttons -->
-            <div class="space-y-4 mt-6">
-              <template v-if="position === 'Project Manager'">
-                <div class="flex gap-3">
+          <!-- ฝั่งขวา: Scrum Members -->
+          <div
+            class="lg:col-span-1 space-y-4"
+            v-if="project?.status !== 'done'"
+          >
+            <div
+              v-for="(member, index) in scrumMemberss"
+              :key="index"
+              class="relative bg-white p-4 rounded-lg shadow cursor-pointer"
+              @click="openPopup(member)"
+              @mouseenter="handleMouseEnter(index)"
+              @mouseleave="handleMouseLeave"
+            >
+              <!-- จุด 3 จุด -->
+              <div
+                class="absolute top-2 right-2 z-20"
+                v-if="hoveredIndex === index"
+                @click.stop
+              >
+                <button
+                  class="text-gray-500 w-6 rounded-full hover:text-black hover:bg-gray-100 focus:outline-none"
+                  @click="toggleDropdown(index)"
+                >
+                  ⋮
+                </button>
+
+                <div
+                  v-if="activeDropdownIndex === index"
+                  class="absolute right-0 mt-2 w-28 bg-white border border-gray-300 rounded shadow-md"
+                >
                   <button
-                    @click="openEditModal(projectId)"
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                    class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-500"
+                    @click="deleteMember(member)"
                   >
-                    Edit Project
-                  </button>
-                  <button
-                    class="bg-[#DD5B5B] rounded-[5px] text-white px-5"
-                    @click="handleDelete"
-                  >
-                    Delete Project
+                    <div class="flex gap-2 text-center">
+                      <img src="/delete.png" alt="" class="w-4 h-4" />
+                      <div><span>ลบ</span></div>
+                    </div>
                   </button>
                 </div>
-                <button
-                  @click="markProjectAsDone"
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                >
-                  Mark Project as done
-                </button>
-                <div>
-                  <button
-                    v-if="!hasSubmittedToday"
-                    @click="showPopup = true"
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  >
-                    Create Daily-scrum
-                  </button>
+              </div>
 
-                  <button
-                    v-else
-                    @click="openEditPopup(getTodayScrumId())"
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
-                  >
-                    Update Daily-scrum
-                  </button>
+              <!-- การ์ด -->
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center space-x-3">
+                  <img
+                    :src="member?.profile_pic || '/user.png'"
+                    referrerpolicy="no-referrer"
+                    alt="profile"
+                    class="w-10 h-10 border-2 border-gray-300 rounded-full object-cover"
+                  />
+                  <div class="font-semibold">
+                    {{ member.firstname }} {{ member.lastname }}
+                    <span class="text-[10px] font-medium">
+                      {{ formatDate(member.created_at) }}
+                    </span>
+                  </div>
                 </div>
-                <button
-                  @click="goToHistory"
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                >
-                  Scrum History
-                </button>
+                <span class="bg-gray-200 text-xs px-3 py-1 rounded-full">
+                  {{ member.role }}
+                </span>
+              </div>
+
+              <!-- เนื้อหา -->
+              <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today }}</p>
+
+              <!-- Daily -->
+              <template v-if="member.type === 'daily'">
+                <div class="flex items-center gap-2">
+                  <strong>ปัญหาวันนี้</strong>
+                </div>
+                <p class="mt-1 text-sm text-gray-700">
+                  {{ member.problem || "-" }}
+                </p>
+                <p>
+                  <strong>พรุ่งนี้ทำอะไร</strong><br />{{
+                    member.tomorrow || "-"
+                  }}
+                </p>
               </template>
 
-              <template v-else>
-                <div>
-                  <button
-                    v-if="!hasSubmittedToday"
-                    @click="showPopup = true"
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                  >
-                    Create Daily-scrum
-                  </button>
-
-                  <button
-                    v-else
-                    @click="openEditPopup(getTodayScrumId())"
-                    class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-blue-600"
-                  >
-                    Update Daily-scrum
-                  </button>
-                </div>
-                <button
-                  @click="goToHistory"
-                  class="w-full bg-white text-gray-700 border border-gray-300 rounded-lg py-2 hover:bg-gray-50"
-                >
-                  Scrum History
-                </button>
+              <!-- Retrospective -->
+              <template
+                v-else-if="
+                  member.type === 'weekly' || member.type === 'retrospective'
+                "
+              >
+                <p><strong>Good</strong><br />{{ member.good || "-" }}</p>
+                <p><strong>Bad</strong><br />{{ member.bad || "-" }}</p>
+                <p><strong>Try</strong><br />{{ member.try || "-" }}</p>
+                <p>
+                  <strong>Next Sprint</strong><br />{{
+                    member.next_sprint || "-"
+                  }}
+                </p>
               </template>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <ScrumComment
+      v-if="showPopupp"
+      :visible="showPopupp"
+      :data="selectedMember"
+      @close="showPopupp = false"
+    />
 
     <EditProject
       v-if="showModal"
@@ -315,7 +353,7 @@ const hoveredIndex = ref(null);
 const activeDropdownIndex = ref(null);
 const canSubmitYesterday = true;
 const selectedScrumId = ref(null);
-
+const showMenu = ref(false);
 const showPopup = ref(false);
 const showPopupp = ref(false);
 const showwPopup = ref(false);

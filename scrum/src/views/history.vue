@@ -1,10 +1,10 @@
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-[#E8FFF1] to-[#CFF5E7] font-noto pt-24"
+    class="min-h-screen bg-gradient-to-br from-[#E8FFF1] to-[#CFF5E7] font-noto pt-28"
   >
     <!-- Header -->
     <div
-      class="flex justify-between items-center px-6 pt-[50px] pb-2 fixed w-full top-0 z-10 bg-[#E8FFF1]"
+      class="flex justify-between items-center px-6 pt-[60px] pb-2 fixed w-full top-0 z-10 bg-[#E8FFF1]"
     >
       <!-- Back -->
       <div class="flex">
@@ -72,95 +72,88 @@
 
     <!-- Card Grid -->
     <div class="flex justify-center">
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 w-full max-w-6xl"
-      >
-        <div
-          v-for="(card, index) in paginatedScrumMembers"
-          :key="index"
-          class="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-3 hover:shadow-xl transition relative"
-          :class="{
-            'border-t-4 border-green-500': card.type === 'daily',
-            'border-t-4 border-green-700': card.type === 'weekly',
-          }"
-        >
-          <div>
-            <div v-if="card.type === 'daily'" class="border-b pb-2">
-              <span
-                class="border-green-500 text-xs font-medium px-2 py-0.5 w-full"
-              >
-                Daily
-              </span>
-            </div>
+  <div
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 w-full max-w-6xl"
+  >
+    <div
+      v-for="(card, index) in paginatedScrumMembers"
+      :key="index"
+      class="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-3 hover:shadow-xl transition relative"
+      :class="{
+        'border-t-4 border-[#F5D2D2]': card.type === 'daily',
+        'border-t-4 border-[#F8F7BA]': card.type === 'weekly',
+      }"
+    >
+      <!-- Header: Daily / Weekly -->
+      <div>
+        <div v-if="card.type === 'daily'" class="border-b pb-2">
+          <span class="border-green-500 font-medium px-2 py-0.5 w-full">
+            Daily
+          </span>
+        </div>
 
-            <div v-else-if="card.type === 'weekly'" class="border-b pb-2">
-              <span class="border-green-700 text-xs font-medium px-2 py-0.5">
-                Weekly
-              </span>
-            </div>
-          </div>
-          <!-- Profile -->
-          <div class="flex gap-4 items-start">
-            <img
-              :src="card.profile_pic || '/user.png'"
-              alt="Avatar"
-              class="w-12 h-12 rounded-full object-cover shadow"
-            />
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap justify-between">
-                <span class="font-semibold text-gray-800 text-base">
-                  {{ card.firstname }} {{ card.lastname }}
-                </span>
-                <span
-                  class="border border-green-200 text-xs px-2 py-0.5 rounded-full font-medium"
-                >
-                  {{ card.position }}
-                </span>
-              </div>
-
-              <!-- Content -->
-              <div class="mt-3 text-sm leading-relaxed text-gray-700 space-y-2">
-                <template v-if="card.type === 'daily'">
-                  <p>
-                    <strong class="text-gray-900">สิ่งที่ทำวันนี้:</strong
-                    ><br />{{ card.today || "-" }}
-                  </p>
-                  <p>
-                    <strong class="text-gray-900">ปัญหาวันนี้:</strong>
-                    <br />{{ card.problem || "-" }}
-                  </p>
-                  <p>
-                    <strong class="text-gray-900">พรุ่งนี้ทำอะไร:</strong
-                    ><br />{{ card.tomorrow || "-" }}
-                  </p>
-                </template>
-
-                <template v-else-if="card.type === 'weekly'">
-                  <p>
-                    <strong>สิ่งที่ทำวันนี้:</strong><br />{{
-                      card.today || "-"
-                    }}
-                  </p>
-                  <p><strong>Good:</strong><br />{{ card.good || "-" }}</p>
-                  <p><strong>Bad:</strong><br />{{ card.bad || "-" }}</p>
-                  <p><strong>Try:</strong><br />{{ card.try || "-" }}</p>
-                  <p>
-                    <strong>Next Sprint:</strong><br />{{
-                      card.next_sprint || "-"
-                    }}
-                  </p>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          <!-- Footer -->
-          <div class="text-right text-xs text-gray-500 border-t pt-2 mt-auto">
-            {{ formatDate(card.created_at) }}
-          </div>
+        <div v-else-if="card.type === 'weekly'" class="border-b pb-2">
+          <span class="border-green-700 font-medium px-2 py-0.5">
+            Weekly
+          </span>
         </div>
       </div>
+
+      <!-- Profile (Image + Name + Position) -->
+      <div class="flex gap-4 items-center">
+        <img
+          :src="card.profile_pic || '/user.png'"
+          alt="Avatar"
+          class="w-12 h-12 rounded-full object-cover shadow"
+        />
+        <div class="flex-1">
+          <span class="font-semibold text-gray-800 block">
+            {{ card.firstname }} {{ card.lastname }}
+          </span>
+          <span
+            class="border border-green-200 text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block"
+          >
+            {{ card.position }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Content: NOW BELOW PROFILE -->
+      <div class="mt-3 text-sm leading-relaxed text-gray-700 space-y-2">
+        <template v-if="card.type === 'daily'">
+          <p>
+            <strong class="text-gray-900">สิ่งที่ทำวันนี้:</strong><br />
+            {{ card.today || "-" }}
+          </p>
+          <p>
+            <strong class="text-gray-900">ปัญหาวันนี้:</strong><br />
+            {{ card.problem || "-" }}
+          </p>
+          <p>
+            <strong class="text-gray-900">พรุ่งนี้ทำอะไร:</strong><br />
+            {{ card.tomorrow || "-" }}
+          </p>
+        </template>
+
+        <template v-else-if="card.type === 'weekly'">
+          <p><strong>สิ่งที่ทำวันนี้:</strong><br />{{ card.today || "-" }}</p>
+          <p><strong>Good:</strong><br />{{ card.good || "-" }}</p>
+          <p><strong>Bad:</strong><br />{{ card.bad || "-" }}</p>
+          <p><strong>Try:</strong><br />{{ card.try || "-" }}</p>
+          <p>
+            <strong>Next Sprint:</strong><br />{{ card.next_sprint || "-" }}
+          </p>
+        </template>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-right text-xs text-gray-500 border-t pt-2 mt-auto">
+        {{ formatDate(card.created_at) }}
+      </div>
     </div>
+  </div>
+</div>
+
     <div class="flex justify-center pb-6">
       <el-pagination
         v-model:current-page="currentPage"

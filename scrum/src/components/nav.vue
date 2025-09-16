@@ -1,67 +1,61 @@
 <template>
   <div class="fixed w-full z-20">
-    <nav
-      class="px-4 py-2 w-full shadow-md bg-[#059669] font-noto flex justify-between #324671"
-    >
+    <nav class="px-4 h-[60px] w-full shadow-md bg-[#059669] font-noto flex justify-between items-center">
+      <!-- Left: Logo + Title -->
       <div class="flex items-center gap-3">
-        <img src="/logo.png" alt="" class="w-7 h-7 rounded-full" />
-        <span class="font-bold text-white">Daily Log</span>
+        <img src="/logo.png" alt="" class="w-8 h-8 rounded-full object-cover" />
+        <span class="font-bold text-white text-lg">Daily Log</span>
       </div>
-      <div>
-        <div class="flex items-center gap-3">
-          <!-- <button>
-          <img src="/images.webp" alt="" class="w-10 h-10 rounded-full" />
-        </button> -->
-        </div>
-        <div class="flex justify-end items-center relative">
-          <div class="flex gap-3">
-            <button>
-              <NotificationBell />
-            </button>
-            <button
-              v-if="user"
-              @click="toggleMenu"
-              class="bg-gray-200 rounded-full flex items-center"
-            >
-              <img
-                :src="user?.profile_pic || '/user.png'"
-                referrerpolicy="no-referrer"
-                alt="profile"
-                class="w-7 h-7 border-2 border-gray-300 rounded-full"
-              />
-            </button>
+
+      <!-- Right: Notification + Avatar -->
+      <div class="relative flex items-center gap-3">
+        <button>
+          <NotificationBell />
+        </button>
+
+        <button
+          v-if="user"
+          @click="toggleMenu"
+          class="bg-gray-200 rounded-full flex items-center justify-center w-8 h-8"
+        >
+          <img
+            :src="user?.profile_pic || '/user.png'"
+            referrerpolicy="no-referrer"
+            alt="profile"
+            class="w-7 h-7 rounded-full "
+          />
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div
+          v-if="showMenu"
+          class="absolute right-0 top-full mt-2 bg-white shadow-lg rounded z-10 min-w-[180px] px-2 py-2"
+        >
+          <div class="flex justify-center gap-2 border-b py-2">
+            <span class="font-semibold">{{ user.firstname }}</span>
+            <span class="font-semibold">{{ user.lastname }}</span>
           </div>
-          <div
-            v-if="showMenu"
-            class="absolute right-0 top-10 mt-2 bg-white shadow rounded z-10 min-w-[180px] px-2 py-2"
+
+          <router-link
+            to="/editprofile"
+            @click="showMenu = false"
+            class="block w-full text-left py-2 hover:bg-gray-100 border-b whitespace-nowrap"
           >
-            <div class="flex justify-center border-b gap-2 py-2">
-              <span class="font-semibold">{{ user.firstname }}</span>
-              <span class="font-semibold">{{ user.lastname }}</span>
-            </div>
+            Edit Profile
+          </router-link>
 
-            <!-- ปุ่ม Edit Profile -->
-            <router-link
-              to="/editprofile"
-              @click="showMenu = false"
-              class="block w-full text-left py-2 hover:bg-gray-100 border-b whitespace-nowrap"
-            >
-              Edit Profile
-            </router-link>
-
-            <!-- ปุ่ม Logout -->
-            <button
-              @click="handleLogout"
-              class="block w-full text-left py-2 hover:bg-gray-100 whitespace-nowrap"
-            >
-              Logout
-            </button>
-          </div>
+          <button
+            @click="handleLogout"
+            class="block w-full text-left py-2 hover:bg-gray-100 whitespace-nowrap"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </nav>
   </div>
 </template>
+
 
 <script setup>
 import { onMounted, ref, onBeforeUnmount } from "vue";

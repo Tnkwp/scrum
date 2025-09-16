@@ -1,209 +1,195 @@
 <template>
-  <div
-    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-  >
-    <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
-      <button class="absolute top-2 right-2 text-xl" @click="emit('close')">
-        ×
+  <div class="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div
+      class="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden"
+    >
+      <!-- ปุ่มปิด -->
+      <button
+        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition"
+        @click="emit('close')"
+      >
+        ✕
       </button>
-      <div class="space-y-2 text-sm">
-        <div v-if="props.data.type === 'daily'">
+
+      <!-- เนื้อหา -->
+      <div class="p-6 space-y-4 text-sm">
+        <!-- Daily / Weekly -->
+        <div v-if="props.data.type === 'daily'" class="">
+          <div>
+            <span class="font-semibold text-gray-800">สิ่งที่ทำวันนี้:</span>
+            <div>
+              <span class="text-gray-600"> {{ props.data.today || "-" }}</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="font-semibold text-gray-800">ปัญหาวันนี้:</span>
+            <div>
+              <span class="text-gray-600">
+                {{ props.data.problem || "-" }}</span
+              >
+            </div>
+          </div>
+          <div>
+            <span class="font-semibold text-gray-800">พรุ่งนี้ทำอะไร:</span>
+            <div>
+              <span class="text-gray-600">
+                {{ props.data.tomorrow || "-" }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="props.data.type === 'weekly'" class="space-y-3">
           <p>
-            <strong>สิ่งที่ทำวันนี้</strong><br />{{ props.data.today || "-" }}
+            <span class="font-semibold">สิ่งที่ทำวันนี้:</span>
+            {{ props.data.today || "-" }}
           </p>
           <p>
-            <strong>ปัญหาวันนี้</strong><br />{{ props.data.problem || "-" }}
+            <span class="font-semibold text-green-600">Good:</span>
+            {{ props.data.good || "-" }}
           </p>
           <p>
-            <strong>พรุ่งนี้ทำอะไร</strong><br />{{
-              props.data.tomorrow || "-"
-            }}
+            <span class="font-semibold text-red-600">Bad:</span>
+            {{ props.data.bad || "-" }}
+          </p>
+          <p>
+            <span class="font-semibold text-blue-600">Try:</span>
+            {{ props.data.try || "-" }}
+          </p>
+          <p>
+            <span class="font-semibold text-purple-600">Next Sprint:</span>
+            {{ props.data.next_sprint || "-" }}
           </p>
         </div>
-        <div
-          v-else-if="
-            props.data.type === 'weekly'
-          "
-        >
-          <p>
-            <strong>สิ่งที่ทำวันนี้</strong><br />{{ props.data.today || "-" }}
-          </p>
-          <p><strong>Good</strong><br />{{ props.data.good || "-" }}</p>
-          <p><strong>Bad</strong><br />{{ props.data.bad || "-" }}</p>
-          <p><strong>Try</strong><br />{{ props.data.try || "-" }}</p>
-          <p>
-            <strong>Next Sprint</strong><br />{{
-              props.data.next_sprint || "-"
-            }}
-          </p>
-        </div>
-        <div v-if="props.data.file && props.data.file.length > 0">
-          <div v-for="(f, index) in props.data.file" :key="index" class="mt-2">
-            <!-- รูปภาพ -->
+
+        <!-- ไฟล์แนบ -->
+        <div v-if="props.data.file?.length" class="space-y-2">
+          <p class="text-sm font-semibold text-gray-700">ไฟล์แนบ:</p>
+          <div v-for="(f, index) in props.data.file" :key="index">
             <img
               v-if="f.mime_type?.startsWith('image')"
               :src="f.file_url"
-              class="w-32 rounded mb-1"
+              class="w-32 rounded-lg shadow-sm border"
             />
-
-            <!-- ไฟล์เอกสารอื่น ๆ -->
-            <div v-else class="flex items-center border rounded px-3 py-2">
-              <!-- PDF -->
-              <template
-                v-if="
-                  f.mime_type === 'application/pdf' ||
-                  f.file_name.toLowerCase().endsWith('.pdf')
-                "
-              >
-                <img src="/pdf.png" alt="" class="w-6 h-6" />
-              </template>
-
-              <!-- Word -->
-              <template
+            <div
+              v-else
+              class="flex items-center gap-2 border rounded-lg px-3 py-2 hover:bg-gray-50 transition"
+            >
+              <img
+                v-if="f.file_name.endsWith('.pdf')"
+                src="/pdf.png"
+                class="w-6 h-6"
+              />
+              <img
                 v-else-if="
-                  f.mime_type.includes('wordprocessingml') ||
-                  f.mime_type === 'application/msword' ||
-                  f.file_name.toLowerCase().endsWith('.doc') ||
-                  f.file_name.toLowerCase().endsWith('.docx')
+                  f.file_name.endsWith('.doc') || f.file_name.endsWith('.docx')
                 "
-              >
-                <img src="/doc.png" alt="" class="w-6 h-6" />
-              </template>
-
-              <!-- Excel -->
-              <template
+                src="/doc.png"
+                class="w-6 h-6"
+              />
+              <img
                 v-else-if="
-                  f.mime_type.includes('spreadsheetml') ||
-                  f.file_name.toLowerCase().endsWith('.xls') ||
-                  f.file_name.toLowerCase().endsWith('.xlsx')
+                  f.file_name.endsWith('.xls') || f.file_name.endsWith('.xlsx')
                 "
-              >
-                <img src="/xls.png" alt="" class="w-6 h-6" />
-              </template>
-
-              <!-- PowerPoint -->
-              <template
+                src="/xls.png"
+                class="w-6 h-6"
+              />
+              <img
                 v-else-if="
-                  f.mime_type.includes('presentationml') ||
-                  f.file_name.toLowerCase().endsWith('.ppt') ||
-                  f.file_name.toLowerCase().endsWith('.pptx')
+                  f.file_name.endsWith('.ppt') || f.file_name.endsWith('.pptx')
                 "
-              >
-                <img src="/ppt.png" alt="" class="w-6 h-6" />
-              </template>
-
-              <!-- Text -->
-              <template
-                v-else-if="
-                  f.mime_type === 'text/plain' ||
-                  f.file_name.toLowerCase().endsWith('.txt')
-                "
-              >
-                <img src="/txt-file.png" alt="" class="w-6 h-6" />
-              </template>
-
-              <!-- Default ไฟล์อื่นๆ -->
-              <template v-else>
-                <svg
-                  class="w-6 h-6 mr-2 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </template>
-
-              <span>{{ f.file_name }}</span>
+                src="/ppt.png"
+                class="w-6 h-6"
+              />
+              <!-- <img v-else src="/file.png" class="w-6 h-6" /> -->
+              <span class="text-sm text-gray-700">{{ f.file_name }}</span>
             </div>
           </div>
         </div>
       </div>
-      <hr class="my-2" />
-      <div>
-        <span class="text-[14px]"> Comment </span>
+
+      <!-- คอมเมนต์ -->
+      <div class="border-t px-6 py-3">
+        <span class="text-sm font-semibold text-gray-700">💬 Comments</span>
       </div>
-      <div class="space-y-3 max-h-64 overflow-y-auto pr-2">
+
+      <div
+        class="px-6 space-y-4 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 pb-4"
+      >
         <div
           v-for="comment in comments"
           :key="comment.id"
-          class="flex items-start justify-between space-x-2 group"
+          class="group flex items-start gap-2"
         >
-          <!-- ส่วนแสดงข้อมูล comment -->
-          <div class="flex-1">
-            <div class="flex gap-2 items-center">
-              <img
-                :src="comment.User?.profile_pic || '/user.png'"
-                class="w-6 h-6 rounded-full"
-                alt="profile"
-              />
-              <p class="text-sm font-semibold">
-                {{ comment.User?.firstname }} {{ comment.User?.lastname }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-700">
-                {{
-                  typeof comment.comment === "string"
-                    ? comment.comment
-                    : JSON.stringify(comment.comment)
-                }}
-              </p>
-            </div>
+          <img
+            :src="comment.User?.profile_pic || '/user.png'"
+            class="w-8 h-8 rounded-full"
+          />
+          <div class="flex-1 bg-gray-50 rounded-lg px-3 py-2">
+            <p class="text-sm font-semibold">
+              {{ comment.User?.firstname }} {{ comment.User?.lastname }}
+            </p>
+            <p class="text-sm text-gray-700">{{ comment.comment }}</p>
           </div>
 
-          <!-- ปุ่ม 3 จุด -->
-          <div class="relative">
-            <div v-if="comment.user_id == userStore.user.id" class="relative">
-              <button @click="toggleMenu(comment.id)" class="">⋮</button>
-
-              <!-- เมนูแก้ไข/ลบ -->
-              <div
-                v-if="openMenuId === comment.id"
-                class="absolute right-0 mt-1 w-28 bg-white border rounded shadow-md z-50"
+          <!-- เมนู 3 จุด -->
+          <div class="relative" v-if="comment.user_id == userStore.user.id">
+            <button
+              @click="toggleMenu(comment.id)"
+              class="transition text-gray-500 hover:text-gray-700"
+            >
+              ⋮
+            </button>
+            <div
+              v-if="openMenuId === comment.id"
+              class="absolute right-3 top-0 mt-1 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+            >
+              <!-- ปุ่มแก้ไข -->
+              <button
+                @click="editComment(comment)"
+                class="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition border-b"
               >
-                <button
-                  class="block w-full text-left px-3 py-1 hover:bg-gray-100 text-sm"
-                  @click="editComment(comment)"
-                >
-                  ✏️ แก้ไข
-                </button>
-                <button
-                  class="block w-full text-left px-3 py-1 hover:bg-red-100 text-sm text-red-600"
-                  @click="deleteComment(comment.id)"
-                >
-                  🗑️ ลบ
-                </button>
-              </div>
+                <img src="/edit.png" alt="edit" class="w-5 h-5 opacity-80" />
+                <span>แก้ไขข้อความ</span>
+              </button>
+
+              <!-- ปุ่มลบ -->
+              <button
+                @click="deleteComment(comment.id)"
+                class="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+              >
+                <img
+                  src="/delete.png"
+                  alt="delete"
+                  class="w-5 h-5 opacity-80"
+                />
+                <span>ลบข้อความ</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- กล่องป้อนคอมเมนต์ -->
-      <div class="flex items-center mt-2">
+      <div class="border-t mt-2 px-6 py-3 flex items-center gap-2">
         <input
           v-model="newComment"
           type="text"
-          :placeholder="editingCommentId ? 'แก้ไขคอมเมนต์...' : 'Sent...'"
-          class="flex-1 border rounded-full px-3 py-1 text-sm"
+          :placeholder="editingCommentId ? 'คอมเมนต์...' : 'คอมเมนต์...'"
+          class="flex-1 border rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           @keydown.enter="editingCommentId ? updateComment() : sendComment()"
         />
         <button
           @click="editingCommentId ? updateComment() : sendComment()"
-          class="ml-2 text-2xl"
+          class="text-black px-2 text-[25px]"
         >
           ➤
         </button>
         <button
           v-if="editingCommentId"
           @click="cancelEdit"
-          class="ml-2 text-sm text-gray-500"
+          class="text-sm text-gray-500 hover:text-gray-700"
         >
           ❌
         </button>
@@ -235,7 +221,7 @@ const props = defineProps({
 
 // console.log("userID",userStore.user)
 // console.log(dailyScrumId);
-console.log("userID",props.data);
+console.log("userID", props.data);
 
 const emit = defineEmits(["close"]);
 

@@ -29,7 +29,7 @@
     </button>
 
     <!-- Title and basic info -->
-    <div @click="goToProjectPage" class="cursor-pointer">
+    <div @click="goToProjectPage" class="cursor-pointer border-b border-black">
       <div class="mb-1 mt-3">
         <p
           class="font-semibold text-gray-800 truncate w-full"

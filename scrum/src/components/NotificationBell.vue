@@ -2,7 +2,7 @@
   <div class="relative">
     <!-- Bell Icon -->
     <button @click="toggleNotification" class="flex items-center relative">
-      <img src="/bell.png" alt="Notifications" class="w-[20px]" />
+      <img src="/bell.png" alt="Notifications" class="w-[25px]" />
       <!-- Badge -->
       <span
         v-if="unreadCount > 0"

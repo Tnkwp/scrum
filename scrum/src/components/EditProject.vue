@@ -302,6 +302,20 @@ async function updateProject() {
     return;
   }
 
+  // ✅ ตรวจสอบ Deadline Date และ Scrum Time ก่อนส่ง
+  if (!form.value.deadline_date && !form.value.scrum_time) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date และ Daily Scrum Time", "warning");
+    return;
+  }
+  if (!form.value.deadline_date) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date", "warning");
+    return;
+  }
+  if (!form.value.scrum_time) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Daily Scrum Time", "warning");
+    return;
+  }
+
   const payload = {
     title: form.value.title,
     description: form.value.description,

@@ -228,6 +228,20 @@ const submitForm = async () => {
     return;
   }
 
+  // ✅ ตรวจสอบ Deadline Date และ Scrum Time
+  if (!form.value.deadline_date && !form.value.scrum_time) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date และ Daily Scrum Time", "warning");
+    return;
+  }
+  if (!form.value.deadline_date) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date", "warning");
+    return;
+  }
+  if (!form.value.scrum_time) {
+    Swal.fire("แจ้งเตือน", "กรุณากรอก Daily Scrum Time", "warning");
+    return;
+  }
+
   const membersData = memberInputs.value
     .filter((input) => input.user && (input.position || input.customPosition))
     .map((input) => ({
@@ -236,7 +250,6 @@ const submitForm = async () => {
         input.position === "Other..." ? input.customPosition : input.position,
     }));
 
-  // ✅ แปลง scrum_time ก่อนส่ง
   const payload = {
     ...form.value,
     scrum_time: formatTimeForMySQL(form.value.scrum_time),
@@ -253,8 +266,6 @@ const submitForm = async () => {
       },
       withCredentials: true,
     });
-
-    console.log("บันทึกเรียบร้อย:", response.data);
 
     Swal.fire("สำเร็จ", "สร้างโปรเจกต์เรียบร้อยแล้ว", "success");
 

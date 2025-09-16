@@ -1,87 +1,103 @@
 <template>
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
   >
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+    <div
+      class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 p-6 space-y-6 relative"
+    >
+      <div class="flex justify-between items-center border-b pb-4">
+        <h2 class="text-xl font-semibold text-gray-800">
+          {{ formData.type === "daily" ? "Daily Post" : "Weekly Post" }}
+        </h2>
+        <button
+          @click="$emit('close')"
+          class="text-gray-500 hover:text-gray-700 transition"
+        >
+          ✕
+        </button>
+      </div>
       <div class="space-y-4">
         <!-- Daily-scrum Type -->
-        <div class="flex justify-between">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              Scrum Type
+              Post type
             </label>
             <el-select
               v-model="formData.type"
               placeholder="Select type"
               class="w-full"
             >
-              <el-option label="Daily Scrum" value="daily" />
-              <el-option label="Weekly Scrum" value="weekly" />
+              <el-option label="Daily Post" value="daily" />
+              <el-option label="Weekly Post" value="weekly" />
             </el-select>
           </div>
+
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Date</label
-            >
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Date
+            </label>
             <el-date-picker
               v-model="formData.created_at"
               type="date"
               placeholder="เลือกวันที่"
               :picker-options="datePickerOptions"
-              class="w-full mb-4"
+              class="w-full"
             />
-            <!-- <input
-              type="date"
-              v-model="formData.created_at"
-              :min="canSubmitYesterday ? minDate : maxDate"
-              :max="maxDate"
-              class="w-full border border-gray-300 rounded px-3 py-2"
-            /> -->
           </div>
         </div>
 
         <!-- Fields -->
-        <div v-if="formData.type === 'daily'">
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >สิ่งที่ทำวันนี้</label
-          >
+        <div
+          v-if="formData.type === 'daily'"
+          class="max-h-[60vh] overflow-y-auto pr-2 space-y-3"
+        >
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            สิ่งที่ทำวันนี้
+          </label>
           <textarea
             v-model="formData.today_task"
             class="w-full border rounded px-3 py-2 h-20"
           />
+
           <div class="flex gap-2 items-center mb-1 mt-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-              >ปัญหาวันนี้</label
-            >
-            <!-- <select
-              v-model="formData.problem_level"
-              class="border rounded px-2 py-2"
-            >
-              <option disabled value="">-- เลือกระดับความรุนแรง --</option>
-              <option>minor</option>
-              <option>moderate</option>
-              <option>critical</option>
-            </select> -->
+            <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
+              ปัญหาวันนี้
+            </label>
+            <!--
+    <select
+      v-model="formData.problem_level"
+      class="border rounded px-2 py-2"
+    >
+      <option disabled value="">-- เลือกระดับความรุนแรง --</option>
+      <option>minor</option>
+      <option>moderate</option>
+      <option>critical</option>
+    </select>
+    -->
           </div>
+
           <textarea
             v-model="formData.problem"
             class="w-full border rounded px-3 py-2 h-20"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1 mt-2"
-            >พรุ่งนี้ทำอะไร</label
-          >
+
+          <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
+            พรุ่งนี้ทำอะไร
+          </label>
           <textarea
             v-model="formData.tomorrow_task"
             class="w-full border rounded px-3 py-2 h-20"
           />
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
               แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
             </label>
+
             <el-upload
               v-model:file-list="fileList"
-              class="upload-demo"
               action=""
               multiple
               :auto-upload="false"
@@ -89,55 +105,68 @@
               :on-remove="handleRemove"
               :on-preview="handlePreview"
               list-type="text"
+              class="w-full flex flex-col"
+              style="width: 100%"
             >
-              <el-button type="primary">Click to upload</el-button>
+              <el-button
+                type="primary"
+                class="w-full !justify-center"
+                style="width: 100%"
+              >
+                Click to upload
+              </el-button>
             </el-upload>
           </div>
         </div>
 
-        <div v-else>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >สิ่งที่ทำวันนี้</label
-          >
+        <div v-else class="max-h-[60vh] overflow-y-auto pr-2 space-y-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            สิ่งที่ทำวันนี้
+          </label>
           <textarea
             v-model="formData.today_task"
             class="w-full border rounded px-3 py-2 h-20"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Good</label
-          >
+
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Good
+          </label>
           <textarea
             v-model="formData.good"
             class="w-full border rounded px-3 py-2 h-20"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Bad</label
-          >
+
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Bad
+          </label>
           <textarea
             v-model="formData.bad"
             class="w-full border rounded px-3 py-2 h-20"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Try</label
-          >
+
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Try
+          </label>
           <textarea
             v-model="formData.try"
             class="w-full border rounded px-3 py-2 h-20"
           />
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Next Sprint</label
-          >
+
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Next Sprint
+          </label>
           <textarea
             v-model="formData.next_sprint"
             class="w-full border rounded px-3 py-2 h-20"
           />
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1 mt-2">
               แนบไฟล์ (เช่น ภาพ, PDF ฯลฯ)
             </label>
+
             <el-upload
               v-model:file-list="fileList"
-              class="upload-demo"
               action=""
               multiple
               :auto-upload="false"
@@ -145,8 +174,16 @@
               :on-remove="handleRemove"
               :on-preview="handlePreview"
               list-type="text"
+              class="w-full flex flex-col"
+              style="width: 100%"
             >
-              <el-button type="primary">Click to upload</el-button>
+              <el-button
+                type="primary"
+                class="w-full !justify-center"
+                style="width: 100%"
+              >
+                Click to upload
+              </el-button>
             </el-upload>
           </div>
         </div>
@@ -270,4 +307,3 @@ const handleSubmit = async () => {
   }
 };
 </script>
-

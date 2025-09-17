@@ -157,6 +157,7 @@ const register = async () => {
     profile_pic_file,
   } = form.value;
 
+  // ตรวจสอบข้อมูลครบถ้วน
   if (!firstname || !lastname || !email || !password || !confirmPassword) {
     Swal.fire({
       icon: "warning",
@@ -166,11 +167,52 @@ const register = async () => {
     return;
   }
 
+  // ตรวจสอบ email ต้องมี @
+  if (!email.includes("@")) {
+    Swal.fire({
+      icon: "error",
+      title: "อีเมลไม่ถูกต้อง",
+      text: "email must include @",
+    });
+    return;
+  }
+
+  // ตรวจสอบความยาว email 4-50 ตัวอักษร
+  if (email.length < 4 || email.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "อีเมลไม่ถูกต้อง",
+      text: "character in email need to be 4-50 letters",
+    });
+    return;
+  }
+
+  // ตรวจสอบรหัสผ่านอย่างน้อย 8 ตัวอักษร
+  if (password.length < 8) {
+    Swal.fire({
+      icon: "error",
+      title: "รหัสผ่านสั้นเกินไป",
+      text: "Password must be at least 8 characters long",
+    });
+    return;
+  }
+
+  // ตรวจสอบรหัสผ่านไม่เกิน 50 ตัวอักษร
+  if (password.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "รหัสผ่านยาวเกินไป",
+      text: "Password cannot exceed 50 characters",
+    });
+    return;
+  }
+
+  // ตรวจสอบรหัสผ่านซ้ำ
   if (password !== confirmPassword) {
     Swal.fire({
       icon: "error",
       title: "รหัสผ่านไม่ตรงกัน",
-      text: "โปรดตรวจสอบรหัสผ่านอีกครั้ง",
+      text: "password is incorrect",
     });
     return;
   }
@@ -183,7 +225,7 @@ const register = async () => {
     formData.append("password", password);
 
     if (profile_pic_file) {
-      formData.append("profile_pic", profile_pic_file); // ชื่อ key ควรตรงกับ backend
+      formData.append("profile_pic", profile_pic_file);
     }
 
     const response = await axios.post(

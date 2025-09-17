@@ -61,59 +61,80 @@ const confirmPassword = ref("")
 
 // ✅ Reset Password
 const handleReset = async () => {
+  // ✅ ตรวจสอบว่ากรอกครบ
   if (!password.value || !confirmPassword.value) {
     Swal.fire({
       icon: "warning",
       title: "Missing Fields",
       text: "Please fill in all password fields.",
-    })
-    return
+    });
+    return;
   }
 
+  // ✅ ตรวจสอบความยาว password
+  if (password.value.length < 8) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Password",
+      text: "Password must be at least 8 characters long",
+    });
+    return;
+  }
+
+  if (password.value.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Password",
+      text: "Password cannot exceed 50 characters",
+    });
+    return;
+  }
+
+  // ✅ ตรวจสอบความตรงกันของ confirmPassword
   if (password.value !== confirmPassword.value) {
     Swal.fire({
       icon: "error",
       title: "Password Mismatch",
-      text: "Passwords do not match. Please try again.",
-    })
-    return
+      text: "password is incorrect",
+    });
+    return;
   }
 
   try {
-    // ✅ ดึง token จาก localStorage (เก็บไว้หลัง verify OTP สำเร็จ)
-    const token = localStorage.getItem("resetToken")
+    // ✅ ดึง token จาก localStorage
+    const token = localStorage.getItem("resetToken");
     if (!token) {
       Swal.fire({
         icon: "error",
         title: "No Token",
         text: "Reset token is missing. Please verify OTP again.",
-      })
-      return
+      });
+      return;
     }
 
     const res = await axios.post(`${backendUrl}/api/users/reset-password`, {
       token,
       newPassword: password.value,
-    })
+    });
 
     await Swal.fire({
       icon: "success",
       title: "Password Reset",
       text: res.data.message || "Your password has been reset successfully.",
-    })
+    });
 
     // เคลียร์ token ออก
-    localStorage.removeItem("resetToken")
+    localStorage.removeItem("resetToken");
 
     // ✅ กลับไปหน้า Login
-    router.push('/')
+    router.push('/');
   } catch (err) {
     Swal.fire({
       icon: "error",
       title: "Error",
       text: err.response?.data?.error || "Failed to reset password.",
-    })
+    });
   }
-}
+};
 </script>
 

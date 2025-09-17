@@ -38,11 +38,12 @@
         />
       </div>
     </div>
-    <button
+    <!-- <button
       class="fixed bottom-4 right-4 w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center shadow-md hover:bg-gray-400 transition"
     >
       <img src="/graphic.png" alt="graphic" class="w-7 h-7" />
-    </button>
+    </button> -->
+    <LeaderboardModal />
   </div>
 </template>
 
@@ -51,6 +52,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
 import ProjectCard from "./ProjectCard.vue";
 import ProjectFormModal from "../components/ProjectFormModal.vue";
+import LeaderboardModal from "../components/leaderModal.vue"
 import { useUserStore } from "../stores/userStore.js";
 import Swal from "sweetalert2";
 

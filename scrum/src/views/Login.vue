@@ -101,7 +101,58 @@ const password = ref("");
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
+function validateEmailAndPassword() {
+  // email must include @
+  if (!email.value.includes("@")) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Email",
+      text: "email must include @",
+      confirmButtonColor: "#EF4444",
+    });
+    return false;
+  }
+
+  // email length 4-50
+  if (email.value.length < 4 || email.value.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Email",
+      text: "character in username need to be 4-50 letters",
+      confirmButtonColor: "#EF4444",
+    });
+    return false;
+  }
+
+  // password length >= 8
+  if (password.value.length < 8) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Password",
+      text: "Password must be at least 8 characters long",
+      confirmButtonColor: "#EF4444",
+    });
+    return false;
+  }
+
+  // password length <= 50
+  if (password.value.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Password",
+      text: "Password cannot exceed 50 characters",
+      confirmButtonColor: "#EF4444",
+    });
+    return false;
+  }
+
+  return true;
+}
+
 async function login() {
+  // ตรวจสอบ validation ก่อน
+  if (!validateEmailAndPassword()) return;
+
   try {
     const res = await axios.post(
       `${backendUrl}/api/users/login`,
@@ -118,29 +169,26 @@ async function login() {
       icon: "success",
       title: "Login Success",
       text: res.data.msg,
-      width: '400px',
+      width: "400px",
       confirmButtonColor: "#56DFCF",
     });
 
-    if (localStorage.getItem("token")){
-      localStorage.removeItem("token")
-      localStorage.setItem("token", res.data.token);
-    } else {
-      localStorage.setItem("token", res.data.token);
-    }
-
+    // เก็บ token
+    localStorage.setItem("token", res.data.token);
 
     router.push("/homepage");
   } catch (error) {
-    await Swal.fire({
+    // แสดงข้อความจาก backend หรือ User not found
+    Swal.fire({
       icon: "error",
       title: "Login Failed",
-      text: error.response?.data?.msg || "Login failed",
+      text: error.response?.data?.msg || "User not found",
       confirmButtonColor: "#EF4444",
     });
     console.error("Login error:", error);
   }
 }
+
 
 function loginWithGoogle() {
   const redirectState = encodeURIComponent(window.location.origin);

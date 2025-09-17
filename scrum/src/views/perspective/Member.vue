@@ -249,7 +249,7 @@
               </div>
 
               <!-- เนื้อหา -->
-              <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today }}</p>
+              <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today || "-" }}</p>
 
               <!-- Daily -->
               <template v-if="member.type === 'daily'">

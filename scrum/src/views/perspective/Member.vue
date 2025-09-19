@@ -412,10 +412,9 @@ const fetchProject = async () => {
 };
 
 const fetchScrumData = async () => {
-  isLoading.value = true; // เริ่มโหลด
   try {
     const res = await axios.get(
-      `${backendUrl}/api/posts/project/${projectId.value}`,
+      `${backendUrl}/api/posts/project/${projectId}`,
       {
         headers: { Authorization: `Bearer ${token.value}` },
         withCredentials: true,
@@ -425,6 +424,7 @@ const fetchScrumData = async () => {
     const scrums = res.data.posts;
     const todayStr = new Date().toISOString().split("T")[0];
 
+    // 🎯 Filter เฉพาะโพสต์วันนี้ + map ข้อมูล
     scrumMemberss.value = scrums
       .filter((post) => {
         const createdDate = new Date(post.created_at)
@@ -451,11 +451,12 @@ const fetchScrumData = async () => {
         created_at: post.created_at,
       }));
 
+    // ✅ ตรวจสอบว่าผู้ใช้ submit วันนี้หรือยัง
     hasSubmittedToday.value = scrumMemberss.value.some(
       (post) => post.user_id === userId
     );
 
-    // Submitted / Not submitted
+    // ✅ Submitted / Not submitted
     const todayScrums = scrums.filter((post) => {
       const scrumDate = new Date(post.created_at).toISOString().split("T")[0];
       return scrumDate === todayStr;
@@ -475,27 +476,34 @@ const fetchScrumData = async () => {
     notSubmittedUsers.value = allMembers.value.filter(
       (member) => !seenUserIds.has(member.id)
     );
+
+    // console.log(scrums);
   } catch (err) {
     console.error("Error fetching post data:", err);
-  } finally {
-    isLoading.value = false; // โหลดเสร็จ
   }
 };
 
-// ✅ reload ตอน mounted
-onMounted(fetchScrumData);
-
-// ✅ reload ถ้า route เปลี่ยน (เช่น projectId เปลี่ยน)
-onBeforeRouteUpdate(async (to, from) => {
+// ✅ เรียกตอน mounted
+onMounted(async () => {
   await fetchScrumData();
-});
 
-// ✅ reload ถ้า dependencies มาไม่พร้อมกัน
-watch([allMembers, projectId, token], async ([members, pid, t]) => {
-  if (members && pid && t) {
-    await fetchScrumData();
+  // 🔔 ตรวจสอบว่าเปิดจาก notification แบบ new_comment
+  if (route.query.popup === "comment") {
+    const dailyScrumId = localStorage.getItem("post_id");
+
+    if (dailyScrumId) {
+      // หา member ที่ตรงกับ dailyScrumId
+      const member = scrumMemberss.value.find(
+        (m) => m.id === Number(dailyScrumId)
+      );
+
+      if (member) {
+        openPopup(member);
+      }
+    }
   }
 });
+
 
 const getTodayScrumId = () => {
   const todayScrum = scrumMemberss.value.find((s) => s.user_id === userId);

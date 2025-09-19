@@ -231,8 +231,8 @@ onMounted(async () => {
         const knownPositions = [
           "BA",
           "UX/UI",
-          "Back-end",
-          "Front-end",
+          "Backend Developer",
+          "Frontend Developer",
           "Tester",
         ];
         const isCustom = !knownPositions.includes(member.position);

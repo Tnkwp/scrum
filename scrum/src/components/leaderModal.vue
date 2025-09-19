@@ -9,7 +9,10 @@
         <!-- Header -->
         <div class="flex justify-between items-center border-b pb-2 mb-4">
           <h2 class="text-xl font-bold">Leaderboard</h2>
-          <button @click="closeModal" class="text-gray-500 hover:text-black text-lg">
+          <button
+            @click="closeModal"
+            class="text-gray-500 hover:text-black text-lg"
+          >
             ✕
           </button>
         </div>
@@ -20,22 +23,25 @@
             <tr class="bg-gray-200">
               <th class="border p-2">อันดับ</th>
               <th class="border p-2">รายชื่อ</th>
-              <th class="border p-2">คะแนน</th>
-              <th class="border p-2">โปรเจกต์</th>
+              <th class="border p-2">คะแนนรวม</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(user, index) in leaderboard" :key="user.id">
               <td class="border p-2">{{ index + 1 }}</td>
-              <td class="border p-2">{{ user.firstname }} {{ user.lastname }}</td>
-              <td class="border p-2">{{ user.scrum_point }}</td>
-              <td class="border p-2">{{ user.project }}</td>
+              <td class="border p-2 text-left">
+                {{ user.firstname }} {{ user.lastname }}
+              </td>
+              <td class="border p-2 text-right">{{ user.scrum_point }}</td>
             </tr>
           </tbody>
         </table>
 
         <!-- กรณีไม่มีข้อมูล -->
-        <div v-if="leaderboard.length === 0" class="text-center text-gray-500 py-4">
+        <div
+          v-if="leaderboard.length === 0"
+          class="text-center text-gray-500 py-4"
+        >
           ไม่มีข้อมูล leaderboard
         </div>
       </div>

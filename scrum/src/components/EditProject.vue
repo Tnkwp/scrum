@@ -92,10 +92,10 @@
 
                 <div
                   v-if="input.showDropdown"
-                  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow"
+                  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-40 overflow-y-auto"
                 >
                   <div
-                    v-for="user in users"
+                    v-for="user in filteredUsers(input)"
                     :key="user.id"
                     class="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
                     @click="
@@ -147,8 +147,8 @@
                   <option disabled value="">Position</option>
                   <option>BA</option>
                   <option>UX/UI</option>
-                  <option>Back-end</option>
-                  <option>Front-end</option>
+                  <option>Backend Developer</option>
+                  <option>Frontend Developer</option>
                   <option>Tester</option>
                   <option>Other...</option>
                 </select>
@@ -249,6 +249,23 @@ onMounted(async () => {
   }
 });
 
+function filteredUsers(currentInput) {
+  // user_id ที่ถูกเลือกแล้ว (ยกเว้น input ปัจจุบัน)
+  const selectedIds = memberInputs.value
+    .filter((m) => m.user && m !== currentInput)
+    .map((m) => m.user.id);
+
+  return users.value.filter((u) => {
+    // ❌ ตัดคนที่ถูกเลือกแล้วในช่องอื่น
+    if (selectedIds.includes(u.id)) return false;
+
+    // ❌ ตัด user ที่ถูกเลือกแล้วในช่องปัจจุบัน (กันชื่อซ้ำ)
+    if (currentInput.user && currentInput.user.id === u.id) return false;
+
+    return true;
+  });
+}
+
 function addMember() {
   memberInputs.value.push({
     user: null,
@@ -304,7 +321,11 @@ async function updateProject() {
 
   // ✅ ตรวจสอบ Deadline Date และ Scrum Time ก่อนส่ง
   if (!form.value.deadline_date && !form.value.scrum_time) {
-    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date และ Daily Scrum Time", "warning");
+    Swal.fire(
+      "แจ้งเตือน",
+      "กรุณากรอก Deadline Date และ Daily Scrum Time",
+      "warning"
+    );
     return;
   }
   if (!form.value.deadline_date) {

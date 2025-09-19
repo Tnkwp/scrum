@@ -89,12 +89,13 @@
                   <span class="ml-2">&#9662;</span>
                 </div>
 
+                <!-- Dropdown รายชื่อ -->
                 <div
                   v-if="input.showDropdown"
-                  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow"
+                  class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow max-h-40 overflow-y-auto"
                 >
                   <div
-                    v-for="user in users"
+                    v-for="user in filteredUsers(input)"
                     :key="user.id"
                     class="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
                     @click="
@@ -146,8 +147,8 @@
                   <option disabled value="">Position</option>
                   <option>BA</option>
                   <option>UX/UI</option>
-                  <option>Back-end</option>
-                  <option>Front-end</option>
+                  <option>Backend Developer</option>
+                  <option>Frontend Developer</option>
                   <option>Tester</option>
                   <option>Other...</option>
                 </select>
@@ -230,7 +231,11 @@ const submitForm = async () => {
 
   // ✅ ตรวจสอบ Deadline Date และ Scrum Time
   if (!form.value.deadline_date && !form.value.scrum_time) {
-    Swal.fire("แจ้งเตือน", "กรุณากรอก Deadline Date และ Daily Scrum Time", "warning");
+    Swal.fire(
+      "แจ้งเตือน",
+      "กรุณากรอก Deadline Date และ Daily Scrum Time",
+      "warning"
+    );
     return;
   }
   if (!form.value.deadline_date) {
@@ -295,6 +300,14 @@ watch(position, (val) => {
     customPosition.value = "";
   }
 });
+
+function filteredUsers(currentInput) {
+  const selectedIds = memberInputs.value
+    .filter((m) => m.user && m !== currentInput) // ไม่รวม user ของช่องปัจจุบัน
+    .map((m) => m.user.id);
+
+  return users.value.filter((u) => !selectedIds.includes(u.id));
+}
 
 function cancelCustomPosition() {
   position.value = "";

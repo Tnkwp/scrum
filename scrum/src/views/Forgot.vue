@@ -58,6 +58,28 @@ const handleSubmit = async () => {
     return
   }
 
+  // ✅ ตรวจสอบว่าต้องมี @
+  if (!email.value.includes("@")) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Email",
+      text: "Email must include @",
+      confirmButtonColor: "#EF4444",
+    })
+    return
+  }
+
+  // ✅ ความยาวระหว่าง 4-50 ตัวอักษร
+  if (email.value.length < 4 || email.value.length > 50) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid Email",
+      text: "Email length must be between 4 and 50 characters",
+      confirmButtonColor: "#EF4444",
+    })
+    return
+  }
+
   try {
     const res = await axios.post(`${backendUrl}/api/users/forgot-password`, {
       email: email.value,

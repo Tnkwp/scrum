@@ -72,26 +72,28 @@
                 </div>
 
                 <div class="flex justify-center px-5">
-                  <div>
-                    <div class="mb-2">
+                  <div class="w-full">
+                    <div
+                      v-if="isLoading"
+                      class="text-center py-4 text-gray-500"
+                    >
+                      กำลังโหลดข้อมูล...
+                    </div>
+                    <div class="mb-4">
                       <p class="font-bold mb-2">คนที่ส่งแล้ว</p>
                       <ul class="ml-4 text-sm space-y-1">
                         <li
                           v-for="user in submittedUsers"
                           :key="user.id"
-                          class="flex justify-between gap-4"
+                          class="grid grid-cols-2 gap-4"
                         >
                           <div>
-                            <span>
-                              {{ user.firstname }} {{ user.lastname }} ({{
-                                user.position
-                              }})
-                            </span>
+                            {{ user.firstname }} {{ user.lastname }} ({{
+                              user.position
+                            }})
                           </div>
-                          <div>
-                            <span class="font-mediu">
-                              {{ user.scrum_point }} คะแนน
-                            </span>
+                          <div class="text-right font-medium">
+                            {{ user.scrum_point }} คะแนน
                           </div>
                         </li>
                       </ul>
@@ -103,16 +105,16 @@
                         <li
                           v-for="member in notSubmittedUsers"
                           :key="member.id"
-                          class="flex justify-between"
+                          class="grid grid-cols-2 gap-4"
                         >
-                          <span>
+                          <div>
                             {{ member.firstname }} {{ member.lastname }} ({{
                               member.position
                             }})
-                          </span>
-                          <span class="font-medium">
+                          </div>
+                          <div class="text-right font-medium">
                             {{ member.scrum_point }} คะแนน
-                          </span>
+                          </div>
                         </li>
                       </ul>
                     </div>
@@ -249,7 +251,9 @@
               </div>
 
               <!-- เนื้อหา -->
-              <p><strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today || "-" }}</p>
+              <p>
+                <strong>สิ่งที่ทำวันนี้</strong><br />{{ member.today || "-" }}
+              </p>
 
               <!-- Daily -->
               <template v-if="member.type === 'daily'">
@@ -324,8 +328,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, onMounted, watch } from "vue";
+import { useRoute, useRouter, onBeforeRouteUpdate } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -358,7 +362,7 @@ const showPopup = ref(false);
 const showPopupp = ref(false);
 const showwPopup = ref(false);
 const selectedMember = ref(null);
-
+const isLoading = ref(false);
 const showModal = ref(false);
 const selectedProject = ref(null);
 const currentProjectId = ref(null);
@@ -408,14 +412,16 @@ const fetchProject = async () => {
 };
 
 const fetchScrumData = async () => {
+  isLoading.value = true; // เริ่มโหลด
   try {
     const res = await axios.get(
-      `${backendUrl}/api/posts/project/${projectId}`,
+      `${backendUrl}/api/posts/project/${projectId.value}`,
       {
         headers: { Authorization: `Bearer ${token.value}` },
         withCredentials: true,
       }
     );
+
     const scrums = res.data.posts;
     const todayStr = new Date().toISOString().split("T")[0];
 
@@ -454,6 +460,7 @@ const fetchScrumData = async () => {
       const scrumDate = new Date(post.created_at).toISOString().split("T")[0];
       return scrumDate === todayStr;
     });
+
     const seenUserIds = new Set();
     submittedUsers.value = todayScrums
       .map((post) => post.user)
@@ -464,29 +471,29 @@ const fetchScrumData = async () => {
         }
         return false;
       });
+
     notSubmittedUsers.value = allMembers.value.filter(
       (member) => !seenUserIds.has(member.id)
     );
   } catch (err) {
     console.error("Error fetching post data:", err);
+  } finally {
+    isLoading.value = false; // โหลดเสร็จ
   }
 };
 
-onMounted(async () => {
-  await fetchScrumData();
+// ✅ reload ตอน mounted
+onMounted(fetchScrumData);
 
-  // ตรวจสอบว่าเปิดจาก notification แบบ new_comment
-  if (route.query.popup === "comment") {
-    const dailyScrumId = localStorage.getItem("post_id");
-    if (dailyScrumId) {
-      // หา member ที่ตรงกับ dailyScrumId
-      const member = scrumMemberss.value.find(
-        (m) => m.id === Number(dailyScrumId)
-      );
-      if (member) {
-        openPopup(member);
-      }
-    }
+// ✅ reload ถ้า route เปลี่ยน (เช่น projectId เปลี่ยน)
+onBeforeRouteUpdate(async (to, from) => {
+  await fetchScrumData();
+});
+
+// ✅ reload ถ้า dependencies มาไม่พร้อมกัน
+watch([allMembers, projectId, token], async ([members, pid, t]) => {
+  if (members && pid && t) {
+    await fetchScrumData();
   }
 });
 

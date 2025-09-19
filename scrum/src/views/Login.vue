@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center bg-[#F0FDF4] px-4">
     <!-- Header -->
     <span
-      class="absolute top-8 left-1/2 transform -translate-x-1/2 text-3xl sm:text-5xl font-noto text-white drop-shadow-md"
+      class="absolute top-8 left-1/2 transform -translate-x-1/2 text-3xl sm:text-5xl font-noto text-black drop-shadow-md"
     >
       Daily Log
     </span>
@@ -13,7 +13,7 @@
     >
       <!-- Title -->
       <div class="flex justify-center mb-8 sm:mb-12">
-        <label class="text-3xl sm:text-5xl font-noto">LogIn</label>
+        <label class="text-3xl sm:text-5xl font-noto">Login</label>
       </div>
 
       <!-- Email -->
